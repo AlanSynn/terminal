@@ -1,0 +1,1 @@
+Credentials, tokens, keychains, browser profiles, cloud auth caches, private SSH/GPG keys, and opaque app state are intentionally not inventoried into git.

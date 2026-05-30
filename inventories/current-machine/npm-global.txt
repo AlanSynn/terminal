@@ -1,0 +1,4 @@
+@mermaid-js/mermaid-cli
+corepack
+npm
+oh-my-codex

@@ -25,6 +25,14 @@ doctor:
 audit:
     scripts/audit-current-machine.sh
 
+
+# Build inventory curation report
+curate-inventory:
+    scripts/curate-inventory.sh
+
+# Audit current machine and build curation report
+inventory: audit curate-inventory
+
 # Verify scripts, manifests, and secret hygiene
 verify: secret-scan shell-syntax
     scripts/verify-new-machine.sh --tier ci

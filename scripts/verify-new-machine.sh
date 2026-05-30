@@ -27,6 +27,7 @@ required_files=(
   packages/Brewfile.common
   scripts/doctor.sh
   scripts/sanitize-import.sh
+  scripts/curate-inventory.sh
   scripts/verify-no-secrets.sh
 )
 for rel in "${required_files[@]}"; do

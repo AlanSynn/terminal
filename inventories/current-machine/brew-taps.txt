@@ -1,0 +1,11 @@
+appleboy/tap
+buo/cask-upgrade
+d12frosted/emacs-plus
+dracula/install
+gromgit/fuse
+hashicorp/tap
+homebrew/cask
+homeport/tap
+jesseduffield/lazydocker
+keith/formulae
+lbjlaq/antigravity-manager
