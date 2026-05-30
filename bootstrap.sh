@@ -68,6 +68,10 @@ if [[ "$TIER" == "cli" || "$TIER" == "full" || "$TIER" == "ci" ]]; then
   run_step "install language tools" "$ROOT_DIR/scripts/install-language-tools.sh" "--tier" "$TIER"
 fi
 
+if [[ "$TIER" == "full" ]]; then
+  run_step "install VS Code extensions" "$ROOT_DIR/scripts/install-vscode-extensions.sh"
+fi
+
 if command -v chezmoi >/dev/null 2>&1; then
   if [[ "$DRY_RUN" == "1" ]]; then
     info "chezmoi dry-run"

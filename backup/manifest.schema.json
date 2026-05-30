@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "workstation-bootstrap user directory backup manifest",
+  "type": "object",
+  "required": ["version", "tool", "driveMarker", "metaDir", "sets"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "tool": { "const": "rsync" },
+    "driveMarker": { "type": "string", "pattern": "^[^/]+$" },
+    "metaDir": { "type": "string", "pattern": "^[^/]+$" },
+    "defaultDelete": { "const": false },
+    "sets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "source", "dest", "platforms", "enabled", "required", "excludeFiles"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "source": { "type": "string" },
+          "dest": { "type": "string", "not": { "pattern": "^/" } },
+          "platforms": { "type": "array", "items": { "enum": ["darwin", "linux"] } },
+          "enabled": { "type": "boolean" },
+          "required": { "type": "boolean" },
+          "excludeFiles": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

@@ -1,5 +1,8 @@
-llm
-marimo
-ruff
+arxiv-mcp-server
 docling
 gistory
+jackknife
+llm
+marimo
+paperef
+ruff

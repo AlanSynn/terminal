@@ -1,0 +1,108 @@
+{
+  "version": 1,
+  "tool": "rsync",
+  "driveMarker": ".workstation-backup-drive.json",
+  "metaDir": "_backup-meta",
+  "defaultDelete": false,
+  "sets": [
+    {
+      "id": "desktop",
+      "source": "~/Desktop/",
+      "dest": "Desktop/",
+      "platforms": ["darwin", "linux"],
+      "enabled": true,
+      "required": false,
+      "excludeFiles": ["common.txt", "darwin.txt"]
+    },
+    {
+      "id": "documents",
+      "source": "~/Documents/",
+      "dest": "Documents/",
+      "platforms": ["darwin", "linux"],
+      "enabled": true,
+      "required": false,
+      "excludeFiles": ["common.txt", "darwin.txt"]
+    },
+    {
+      "id": "downloads",
+      "source": "~/Downloads/",
+      "dest": "Downloads/",
+      "platforms": ["darwin", "linux"],
+      "enabled": true,
+      "required": false,
+      "excludeFiles": ["common.txt", "darwin.txt"]
+    },
+    {
+      "id": "workspace",
+      "source": "~/Workspace/",
+      "dest": "Workspace/",
+      "platforms": ["darwin", "linux"],
+      "enabled": true,
+      "required": false,
+      "excludeFiles": ["common.txt"]
+    },
+    {
+      "id": "pictures",
+      "source": "~/Pictures/",
+      "dest": "Pictures/",
+      "platforms": ["darwin", "linux"],
+      "enabled": true,
+      "required": false,
+      "excludeFiles": ["common.txt", "darwin.txt"]
+    },
+    {
+      "id": "movies",
+      "source": "~/Movies/",
+      "dest": "Movies/",
+      "platforms": ["darwin", "linux"],
+      "enabled": true,
+      "required": false,
+      "excludeFiles": ["common.txt", "darwin.txt"]
+    },
+    {
+      "id": "music",
+      "source": "~/Music/",
+      "dest": "Music/",
+      "platforms": ["darwin", "linux"],
+      "enabled": true,
+      "required": false,
+      "excludeFiles": ["common.txt", "darwin.txt"]
+    },
+    {
+      "id": "public",
+      "source": "~/Public/",
+      "dest": "Public/",
+      "platforms": ["darwin", "linux"],
+      "enabled": true,
+      "required": false,
+      "excludeFiles": ["common.txt", "darwin.txt"]
+    },
+    {
+      "id": "onedrive",
+      "source": "~/Onedrive/",
+      "dest": "Onedrive/",
+      "platforms": ["darwin", "linux"],
+      "enabled": false,
+      "required": false,
+      "excludeFiles": ["common.txt", "darwin.txt"]
+    },
+    {
+      "id": "dropbox",
+      "source": "~/GaTech Dropbox/",
+      "dest": "GaTech Dropbox/",
+      "platforms": ["darwin", "linux"],
+      "enabled": false,
+      "required": false,
+      "excludeFiles": ["common.txt", "darwin.txt"]
+    },
+    {
+      "id": "zotero",
+      "source": "~/Zotero/",
+      "dest": "Zotero/",
+      "platforms": ["darwin", "linux"],
+      "enabled": false,
+      "required": false,
+      "excludeFiles": ["common.txt", "darwin.txt"]
+    }
+  ]
+}

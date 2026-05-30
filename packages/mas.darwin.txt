@@ -1,22 +1,40 @@
+# Canonical Mac App Store manifest, including paid/large apps visible in current inventory.
+360593530 Notability
+405399194 Kindle Classic
+409183694 Keynote
+409201541 Pages
+409203825 Numbers
+424389933 Final Cut Pro
+424390742 Compressor
+434290957 Motion
+441258766 Magnet
+470158793 Keka
+497799835 Xcode
+498672703 Droplr
+587748131 Claquette
+634148309 Logic Pro
+640199958 Developer
+803453959 Slack
+836505650 Battery Monitor
+869223134 KakaoTalk
+890031187 Marked 2
+937984704 Amphetamine
+985614903 SQLPro Studio
+1023251042 AladinEbook
+1238750814 Checkor
+1273998507 Turn Off the Lights for Safari
+1351639930 Gifski
+1438243180 Dark Reader for Safari
+1449752748 SubShift
+1450874784 Transporter
+1469904787 Subtitle+
+1518425043 Boop
+1519867270 Refined GitHub
+1522267256 Shareful
+1540160809 OneTab
 1569813296 1Password for Safari
 1586435171 Actions
-937984704 Amphetamine
-1518425043 Boop
-1438243180 Dark Reader for Safari
-640199958 Developer
-424390742 Compressor
-424389933 Final Cut Pro
-409183694 Keynote
-634148309 Logic Pro
-441258766 Magnet
-434290957 Motion
-409203825 Numbers
-409201541 Pages
-6714467650 Perplexity
-1611378436 Pure Paste
-1519867270 Refined GitHub
-803453959 Slack
-985614903 SQLPro Studio
 1607635845 Velja
-497799835 Xcode
-869223134 KakaoTalk
+1611378436 Pure Paste
+1615988943 Folder Peek
+6714467650 Perplexity

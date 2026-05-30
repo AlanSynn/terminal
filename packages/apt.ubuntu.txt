@@ -3,8 +3,10 @@ ca-certificates
 curl
 file
 git
+jq
 locales
 procps
+rsync
 sudo
 tmux
 zsh

@@ -29,7 +29,7 @@ install_mas_apps() {
   local file="$ROOT_DIR/packages/mas.darwin.txt"
   [[ -f "$file" ]] || return 0
   command -v mas >/dev/null 2>&1 || { warn "mas unavailable; skipping App Store apps"; return 0; }
-  if ! mas account >/dev/null 2>&1; then
+  if ! is_dry_run && ! mas account >/dev/null 2>&1; then
     warn "mas is not signed in; skipping App Store apps"
     return 0
   fi

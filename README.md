@@ -27,9 +27,12 @@ just --list
 just doctor
 just audit
 just verify
+just manifest-check
+just backup-smoke
 just secret-scan
 just import-init-dry-run
 just ubuntu-smoke
+just backup-plan DRIVE=/Volumes/<EmergencyDrive>
 ```
 
 ## Repo layout
@@ -39,7 +42,7 @@ just ubuntu-smoke
 - `packages/` — common, macOS, Linux, MAS, and language-tool manifests.
 - `scripts/` — install, audit, import, and verification scripts.
 - `.chezmoi*`, `dot_*`, `private_dot_*` — chezmoi source files.
-- `docs/` — migration/security/platform policy, including `docs/verification-readiness.md`.
+- `docs/` — migration/security/platform policy, including `docs/verification-readiness.md` and `docs/emergency-backup-layout.md`.
 - `test/` — smoke tests and container fixtures.
 
 ## Safety

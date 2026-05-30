@@ -106,4 +106,11 @@ write_delta "bun globals" "$tmp_dir/current-bun" "$tmp_dir/manifest-bun"
 write_delta "uv tools" "$tmp_dir/current-uv" "$tmp_dir/manifest-uv"
 write_delta "cargo tools" "$tmp_dir/current-cargo" "$tmp_dir/manifest-cargo"
 
+python3 - "$report" <<'PY'
+from pathlib import Path
+import sys
+p = Path(sys.argv[1])
+p.write_text(p.read_text().rstrip() + "\n")
+PY
+
 success "wrote $report"
