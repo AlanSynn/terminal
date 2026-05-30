@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+{{- if eq .chezmoi.os "darwin" }}
+if [[ "${CHEZMOI_APPLY_DEFAULTS:-0}" == "1" ]]; then
+  "{{ .chezmoi.sourceDir }}/scripts/setup-macos-defaults.sh"
+else
+  echo "Skipping macOS defaults; set CHEZMOI_APPLY_DEFAULTS=1 to apply."
+fi
+{{- else }}
+echo "Not macOS; skipping macOS defaults."
+{{- end }}

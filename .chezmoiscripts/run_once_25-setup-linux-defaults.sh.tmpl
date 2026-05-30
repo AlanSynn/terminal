@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+{{- if eq .chezmoi.os "linux" }}
+if [[ "${CHEZMOI_APPLY_DEFAULTS:-0}" == "1" ]]; then
+  "{{ .chezmoi.sourceDir }}/scripts/setup-linux-defaults.sh"
+else
+  echo "Skipping Linux defaults; set CHEZMOI_APPLY_DEFAULTS=1 to apply."
+fi
+{{- else }}
+echo "Not Linux; skipping Linux defaults."
+{{- end }}

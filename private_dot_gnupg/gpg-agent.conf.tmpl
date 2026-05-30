@@ -1,0 +1,18 @@
+{{- $arch := .chezmoi.arch -}}
+{{- $isMac := eq .chezmoi.os "darwin" -}}
+{{- $isLinux := eq .chezmoi.os "linux" -}}
+{{- $brewPrefix := "" -}}
+{{- if $isMac -}}
+{{-   if eq $arch "arm64" -}}
+{{-     $brewPrefix = "/opt/homebrew" -}}
+{{-   else -}}
+{{-     $brewPrefix = "/usr/local" -}}
+{{-   end -}}
+{{- else if $isLinux -}}
+{{-   $brewPrefix = "/home/linuxbrew/.linuxbrew" -}}
+{{- end -}}
+{{- if $isMac }}
+pinentry-program {{ $brewPrefix }}/bin/pinentry-mac
+{{- else if $isLinux }}
+# Prefer distribution pinentry on Linux; override in ~/.gnupg/gpg-agent.conf.local if needed.
+{{- end }}

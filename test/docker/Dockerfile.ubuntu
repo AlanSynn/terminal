@@ -1,0 +1,6 @@
+FROM ubuntu:24.04
+RUN apt-get update && apt-get install -y bash ca-certificates curl git sudo && rm -rf /var/lib/apt/lists/*
+WORKDIR /workspace
+COPY . .
+RUN BOOTSTRAP_DRY_RUN=1 bash -n bootstrap.sh scripts/*.sh scripts/lib/*.sh test/*.sh
+RUN ./bootstrap.sh --dry-run --tier ci

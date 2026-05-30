@@ -1,0 +1,38 @@
+{{- $arch := .chezmoi.arch -}}
+{{- $isMac := eq .chezmoi.os "darwin" -}}
+{{- $isLinux := eq .chezmoi.os "linux" -}}
+{{- $brewPrefix := "" -}}
+{{- if $isMac -}}
+{{-   if eq $arch "arm64" -}}
+{{-     $brewPrefix = "/opt/homebrew" -}}
+{{-   else -}}
+{{-     $brewPrefix = "/usr/local" -}}
+{{-   end -}}
+{{- else if $isLinux -}}
+{{-   $brewPrefix = "/home/linuxbrew/.linuxbrew" -}}
+{{- end -}}
+
+[data]
+    name = "Alan Synn"
+    email = "alan@alansynn.com"
+    profile = "personal"
+    osid = {{ .chezmoi.os | quote }}
+    arch = {{ $arch | quote }}
+    hostname = {{ .chezmoi.hostname | quote }}
+    is_macos = {{ $isMac }}
+    is_linux = {{ $isLinux }}
+    is_apple_silicon = {{ and $isMac (eq $arch "arm64") }}
+    is_intel_mac = {{ and $isMac (ne $arch "arm64") }}
+    brew_prefix = {{ $brewPrefix | quote }}
+    install_gui_apps = {{ $isMac }}
+    install_ai_tools = true
+    install_research_tools = true
+    secrets_provider = "1password"
+
+[onepassword]
+    command = "op"
+    prompt = true
+
+[git]
+    autoCommit = false
+    autoPush = false

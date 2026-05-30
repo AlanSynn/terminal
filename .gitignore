@@ -1,0 +1,32 @@
+# Runtime / local state
+.omx/
+.DS_Store
+.AppleDouble
+*.swp
+*.swo
+__pycache__/
+node_modules/
+.cache/
+.env
+.env.*
+
+# Secret-bearing material: never track
+key/
+**/*.pem
+**/*.key
+**/id_rsa*
+**/id_ed25519*
+credentials.json
+**/credentials.json
+**/token.json
+**/tokens.json
+**/client_secret.json
+**/service-account.json
+**/keys.json
+private_dot_config/github-copilot/apps.json
+private_Library/**/keys.json*
+private_dot_ssh/private-keys*/
+private_dot_gnupg/private-keys-v1.d/
+
+# Generated inventories that need review before commit
+inventories/current-machine/raw/

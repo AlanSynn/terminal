@@ -1,0 +1,4 @@
+brew "gcc"
+brew "make"
+brew "pkg-config"
+brew "openssl@3"

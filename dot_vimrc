@@ -1,0 +1,11 @@
+" Managed by workstation-bootstrap
+set nocompatible
+set number
+set hidden
+set mouse=a
+set tabstop=4 shiftwidth=4 expandtab
+syntax on
+filetype plugin indent on
+if executable('rg')
+  set grepprg=rg\ --vimgrep\ --smart-case\ --hidden
+endif

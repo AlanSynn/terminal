@@ -1,0 +1,9 @@
+{{- $isMac := eq .chezmoi.os "darwin" -}}
+# Managed SSH config template. Keys are intentionally not stored in this repo.
+Host github.com
+    HostName github.com
+    User git
+    AddKeysToAgent yes
+{{- if $isMac }}
+    UseKeychain yes
+{{- end }}

@@ -1,0 +1,6 @@
+FROM fedora:latest
+RUN dnf install -y bash ca-certificates curl git sudo && dnf clean all
+WORKDIR /workspace
+COPY . .
+RUN BOOTSTRAP_DRY_RUN=1 bash -n bootstrap.sh scripts/*.sh scripts/lib/*.sh test/*.sh
+RUN ./bootstrap.sh --dry-run --tier ci

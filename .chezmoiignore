@@ -1,0 +1,37 @@
+# Repo/support files not applied to home
+README.md
+masterplan.md
+bootstrap.sh
+Justfile
+packages/
+scripts/
+docs/
+inventories/
+test/
+.omx/
+.git/
+.gitignore
+.gitattributes
+.dockerignore
+
+# Runtime/cache never sync
+**/.DS_Store
+**/*.swp
+**/*.swo
+**/node_modules/
+**/__pycache__/
+**/.git/
+
+# Secret-risk paths never apply unless explicitly reintroduced encrypted
+key/
+private_dot_config/github-copilot/apps.json
+private_dot_gnupg/private-keys-v1.d/
+private_dot_ssh/private-keys/
+private_Library/
+
+{{- if ne .chezmoi.os "darwin" }}
+.chezmoiscripts/run_once_*macos*.sh.tmpl
+{{- end }}
+{{- if ne .chezmoi.os "linux" }}
+.chezmoiscripts/run_once_*linux*.sh.tmpl
+{{- end }}

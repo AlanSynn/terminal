@@ -1,0 +1,20 @@
+{{- $arch := .chezmoi.arch -}}
+{{- $isMac := eq .chezmoi.os "darwin" -}}
+{{- $isLinux := eq .chezmoi.os "linux" -}}
+{{- $brewPrefix := "" -}}
+{{- if $isMac -}}
+{{-   if eq $arch "arm64" -}}
+{{-     $brewPrefix = "/opt/homebrew" -}}
+{{-   else -}}
+{{-     $brewPrefix = "/usr/local" -}}
+{{-   end -}}
+{{- else if $isLinux -}}
+{{-   $brewPrefix = "/home/linuxbrew/.linuxbrew" -}}
+{{- end -}}
+# Managed by workstation-bootstrap
+export PATH="$HOME/bin:$HOME/.local/bin:$PATH"
+{{- if or $isMac $isLinux }}
+if [ -x "{{ $brewPrefix }}/bin/brew" ]; then
+  eval "$("{{ $brewPrefix }}/bin/brew" shellenv)"
+fi
+{{- end }}

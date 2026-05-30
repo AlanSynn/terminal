@@ -1,0 +1,33 @@
+{{- $arch := .chezmoi.arch -}}
+{{- $isMac := eq .chezmoi.os "darwin" -}}
+{{- $isLinux := eq .chezmoi.os "linux" -}}
+{{- $brewPrefix := "" -}}
+{{- if $isMac -}}
+{{-   if eq $arch "arm64" -}}
+{{-     $brewPrefix = "/opt/homebrew" -}}
+{{-   else -}}
+{{-     $brewPrefix = "/usr/local" -}}
+{{-   end -}}
+{{- else if $isLinux -}}
+{{-   $brewPrefix = "/home/linuxbrew/.linuxbrew" -}}
+{{- end -}}
+# Managed by workstation-bootstrap
+export ZSH="$HOME/.oh-my-zsh"
+ZSH_THEME="pure"
+plugins=(git fzf zsh-autosuggestions zsh-syntax-highlighting)
+[ -f "$ZSH/oh-my-zsh.sh" ] && source "$ZSH/oh-my-zsh.sh"
+
+# OS-aware Homebrew helpers
+export HOMEBREW_PREFIX="{{ $brewPrefix }}"
+if command -v brew >/dev/null 2>&1; then
+  export HOMEBREW_PREFIX="$(brew --prefix)"
+fi
+
+path_prepend() { [ -d "$1" ] && case ":$PATH:" in *":$1:"*) ;; *) PATH="$1:$PATH" ;; esac; }
+path_prepend "$HOME/.local/bin"
+path_prepend "$HOME/bin"
+path_prepend "$HOMEBREW_PREFIX/bin"
+path_prepend "$HOMEBREW_PREFIX/sbin"
+
+[ -f "$HOME/.zshrc.local" ] && source "$HOME/.zshrc.local"
+[ -f "$HOME/.shell.alan" ] && source "$HOME/.shell.alan"

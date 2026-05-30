@@ -1,0 +1,8 @@
+# Managed global git ignore
+.DS_Store
+*.swp
+*.swo
+.env
+.env.*
+credentials.json
+secrets.json
