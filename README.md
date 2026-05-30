@@ -1,14 +1,14 @@
 # workstation-bootstrap
 
-Clean, cross-platform workstation bootstrap for Alan's macOS and Linux development environments.
+Clean, cross-platform workstation bootstrap for Alan's macOS and Ubuntu Linux development environments.
 
-This repository is an **Init v2**: it reuses the useful scaffold from the old `Init` dotfiles repo, but treats the current machine inventory—not the old repo—as the source of truth. It supports macOS and Linux through chezmoi, Homebrew/Linuxbrew, OS-native package prerequisites, and explicit verification scripts.
+This repository is an **Init v2**: it reuses the useful scaffold from the old `Init` dotfiles repo, but treats the current machine inventory—not the old repo—as the source of truth. It supports macOS and Ubuntu Linux through chezmoi, Homebrew/Linuxbrew, OS-native package prerequisites, and explicit verification scripts.
 
 ## Principles
 
 - No plaintext secrets in git.
 - Current machine is evidence, not a binary image.
-- macOS and Linux share a core dotfile layer but keep OS-specific packages/defaults separate.
+- macOS and Ubuntu Linux share a core dotfile layer but keep OS-specific packages/defaults separate.
 - Apple Silicon and Intel Homebrew paths are detected, not hardcoded.
 - Migration Assistant/Time Machine are fallback/data-transfer tools, not the canonical bootstrap.
 
@@ -29,6 +29,7 @@ just audit
 just verify
 just secret-scan
 just import-init-dry-run
+just ubuntu-smoke
 ```
 
 ## Repo layout
@@ -38,7 +39,7 @@ just import-init-dry-run
 - `packages/` — common, macOS, Linux, MAS, and language-tool manifests.
 - `scripts/` — install, audit, import, and verification scripts.
 - `.chezmoi*`, `dot_*`, `private_dot_*` — chezmoi source files.
-- `docs/` — migration/security/platform policy.
+- `docs/` — migration/security/platform policy, including `docs/verification-readiness.md`.
 - `test/` — smoke tests and container fixtures.
 
 ## Safety

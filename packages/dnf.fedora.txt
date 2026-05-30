@@ -1,9 +1,0 @@
-@development-tools
-ca-certificates
-curl
-file
-git
-procps-ng
-sudo
-tmux
-zsh

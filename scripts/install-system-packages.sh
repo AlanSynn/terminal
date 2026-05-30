@@ -48,26 +48,21 @@ if ! is_linux; then
   exit 0
 fi
 
+linux_distribution="$(linux_id)"
 pm="$(package_manager)"
-info "Linux package manager: $pm tier=$TIER"
-case "$pm" in
-  apt)
-    mapfile -t packages < <(read_manifest "$ROOT_DIR/packages/apt.ubuntu.txt")
-    [[ ${#packages[@]} -gt 0 ]] || exit 0
-    install_with_sudo apt-get update
-    install_with_sudo apt-get install -y "${packages[@]}"
-    ;;
-  dnf)
-    mapfile -t packages < <(read_manifest "$ROOT_DIR/packages/dnf.fedora.txt")
-    [[ ${#packages[@]} -gt 0 ]] || exit 0
-    install_with_sudo dnf install -y "${packages[@]}"
-    ;;
-  pacman)
-    mapfile -t packages < <(read_manifest "$ROOT_DIR/packages/pacman.arch.txt")
-    [[ ${#packages[@]} -gt 0 ]] || exit 0
-    install_with_sudo pacman -Sy --needed --noconfirm "${packages[@]}"
-    ;;
-  *)
-    warn "no supported native package manager found; install git, curl, build tools, zsh, tmux manually"
-    ;;
-esac
+info "Linux distribution: $linux_distribution package_manager=$pm tier=$TIER"
+
+if [[ "$linux_distribution" != "ubuntu" ]]; then
+  warn "Linux native prerequisites currently support Ubuntu only; skipping distro-specific install for $linux_distribution"
+  exit 0
+fi
+
+if [[ "$pm" != "apt" ]]; then
+  warn "Ubuntu prerequisites require apt-get; found package_manager=$pm"
+  exit 0
+fi
+
+mapfile -t packages < <(read_manifest "$ROOT_DIR/packages/apt.ubuntu.txt")
+[[ ${#packages[@]} -gt 0 ]] || exit 0
+install_with_sudo apt-get update
+install_with_sudo apt-get install -y "${packages[@]}"

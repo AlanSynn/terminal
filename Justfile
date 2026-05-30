@@ -64,3 +64,7 @@ chezmoi-data:
 # Chezmoi diff, non-fatal while repo is under construction
 chezmoi-diff:
     chezmoi diff --source . || true
+
+# Build Ubuntu Docker smoke image
+ubuntu-smoke:
+    docker build -f test/docker/Dockerfile.ubuntu -t workstation-bootstrap-ubuntu-smoke .

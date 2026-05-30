@@ -52,7 +52,7 @@ with evidence that:
 - dotfiles apply through chezmoi without unexpected diffs
 - packages install through OS-aware package manifests
 - macOS casks/MAS apps are separated from Linux flows
-- Linux package prerequisites are handled for Debian/Ubuntu, Fedora, Arch, and generic fallback
+- Linux package prerequisites are handled for Ubuntu first; Fedora/Arch are deferred
 - secrets are absent from git and either re-authenticated or provided through an encrypted/password-manager-backed path
 - Apple Silicon and Intel Homebrew prefixes both work
 - setup can run in dry-run/minimal/full modes
@@ -159,8 +159,6 @@ workstation-bootstrap/
 │   ├── Brewfile.linux
 │   ├── mas.darwin.txt
 │   ├── apt.ubuntu.txt
-│   ├── dnf.fedora.txt
-│   ├── pacman.arch.txt
 │   ├── npm-global.txt
 │   ├── bun-global.txt
 │   ├── uv-tools.txt
@@ -207,9 +205,7 @@ workstation-bootstrap/
 │
 └── test/
     ├── docker/
-    │   ├── Dockerfile.ubuntu
-    │   ├── Dockerfile.fedora
-    │   └── Dockerfile.arch
+    │   └── Dockerfile.ubuntu
     ├── smoke-bootstrap.sh
     └── verify-no-secrets.sh
 ```
@@ -244,9 +240,8 @@ Linux support should be practical, not perfect.
 
 Tier 1:
 
-- Ubuntu/Debian via `apt-get`
-- Fedora via `dnf`
-- Arch via `pacman`
+- Ubuntu via `apt-get`
+- Fedora/Arch are explicitly deferred until Ubuntu is proven on a fresh target
 
 Tier 2:
 
@@ -301,8 +296,6 @@ Linux bootstrap needs native prerequisites before Linuxbrew:
 
 ```text
 packages/apt.ubuntu.txt
-packages/dnf.fedora.txt
-packages/pacman.arch.txt
 ```
 
 These should include only prerequisites and tools better installed natively.
@@ -520,9 +513,7 @@ just verify
 
 Use Docker smoke tests:
 
-- Ubuntu/Debian container
-- Fedora container
-- Arch container if practical
+- Ubuntu container only for the first Linux pass
 
 Checks:
 
@@ -617,7 +608,7 @@ Exit criteria:
 Deliverables:
 
 - macOS bootstrap path
-- Linux bootstrap path for Ubuntu/Fedora/Arch/generic
+- Linux bootstrap path for Ubuntu only in the first pass
 - package installer logic
 - postinstall hooks
 

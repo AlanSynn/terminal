@@ -1,8 +1,0 @@
-base-devel
-ca-certificates
-curl
-file
-git
-sudo
-tmux
-zsh
