@@ -17,6 +17,7 @@ cd ~/Workspace/src/Management/terminal
 - 설치 선택지는 커맨드라인 파라미터가 아니라 **번호 선택 메뉴(드롭다운 같은 TTY 인터페이스)**로 고릅니다.
 - Enter를 누르면 안전한 기본값으로 진행합니다.
 - 기본 action은 **preview/dry-run**입니다.
+- 실행마다 `run id`, `Planned flow`, `[FLOW 1/3]` 같은 단계 표시가 나와서 어디까지 왔는지 추적할 수 있습니다.
 - 실제 적용은 메뉴에서 `apply`를 고른 뒤 `APPLY`를 직접 입력해야 합니다.
 - 자동화/CI/디버깅이 필요할 때만 하위 엔진인 `bootstrap.sh`를 직접 호출합니다.
 
@@ -36,6 +37,37 @@ cd ~/Workspace/src/Management/terminal
 | 최소 dotfile/base tool 적용 | `minimal` → `minimal` → `standard` → `apply` |
 | Mac 전체 GUI/MAS/VS Code까지 preview | `personal` → `full` → `full` → `preview` |
 | CI/container 검증 | `ci` → `ci` → `none` 또는 `standard` → `preview` |
+
+## 실행 흐름 추적
+
+메뉴 선택이 끝나면 installer가 먼저 선택 요약과 planned flow를 출력합니다.
+
+```text
+Selected plan
+-------------
+profile:  personal
+tier:     cli
+audit:    standard
+action:   dry-run
+
+Planned flow
+------------
+run id:   20260602T201511Z-12345
+1. selection       complete; profile=personal tier=cli audit=standard action=dry-run
+2. preflight       secret scan + private risk audit
+3. bootstrap       preview bootstrap for personal/cli
+4. finish          final status and next-step signal
+```
+
+실제로 실행되는 동안에는 wrapper 단계가 이렇게 표시됩니다.
+
+```text
+[FLOW 1/3] preflight audits: standard
+[FLOW 2/3] bootstrap engine: profile=personal tier=cli action=dry-run
+[FLOW 3/3] installer complete: run id 20260602T201511Z-12345
+```
+
+이 흐름은 영구 로그 파일을 기본 생성하지 않고 화면에만 보여줍니다. 자세한 dry-run 출력은 그대로 `bootstrap.sh` 단계 로그에서 확인합니다.
 
 ## 설치 선택지
 

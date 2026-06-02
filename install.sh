@@ -12,6 +12,7 @@ TIER="${WB_INSTALL_TIER:-cli}"
 AUDIT_LEVEL="${WB_INSTALL_AUDIT:-standard}"
 ACTION="${WB_INSTALL_ACTION:-dry-run}"
 ASSUME_YES="${WB_INSTALL_ASSUME_YES:-0}"
+RUN_ID="${WB_INSTALL_RUN_ID:-$(date -u +%Y%m%dT%H%M%SZ)-$$}"
 
 usage() {
   cat <<'USAGE'
@@ -32,6 +33,7 @@ Safety:
   - Real apply asks you to type APPLY.
   - Non-interactive real apply is refused unless CI explicitly sets approval.
 
+Every run prints a run id, planned flow, and [FLOW] progress markers.
 Advanced automation should call bootstrap.sh directly or use the test recipes.
 USAGE
 }
@@ -70,6 +72,38 @@ normalize_action() {
     plan) printf 'plan-only\n' ;;
     *) printf '%s\n' "$1" ;;
   esac
+}
+
+audit_summary() {
+  case "$AUDIT_LEVEL" in
+    none) printf 'skip preflight audits\n' ;;
+    standard) printf 'secret scan + private risk audit\n' ;;
+    full) printf 'secret scan + private risk audit + public audit\n' ;;
+  esac
+}
+
+bootstrap_summary() {
+  case "$ACTION" in
+    dry-run) printf 'preview bootstrap for %s/%s\n' "$PROFILE" "$TIER" ;;
+    apply) printf 'real bootstrap apply for %s/%s after confirmation\n' "$PROFILE" "$TIER" ;;
+    plan-only) printf 'not executed; plan only\n' ;;
+  esac
+}
+
+trace_step() {
+  printf '[FLOW %s] %s\n' "$1" "$2"
+}
+
+print_flow() {
+  cat <<FLOW
+Planned flow
+------------
+run id:   $RUN_ID
+1. selection       complete; profile=$PROFILE tier=$TIER audit=$AUDIT_LEVEL action=$ACTION
+2. preflight       $(audit_summary)
+3. bootstrap       $(bootstrap_summary)
+4. finish          final status and next-step signal
+FLOW
 }
 
 menu_choice() {
@@ -194,6 +228,8 @@ Bootstrap engine command:
   ./bootstrap.sh ${bootstrap_args[*]}
 PLAN
 
+  print_flow
+
   case "$AUDIT_LEVEL" in
     none)
       cat <<'PLAN'
@@ -236,9 +272,11 @@ confirm_apply() {
 run_audits() {
   case "$AUDIT_LEVEL" in
     none)
+      trace_step "1/3" "preflight audits skipped"
       info "preflight audits skipped"
       ;;
     standard|full)
+      trace_step "1/3" "preflight audits: $AUDIT_LEVEL"
       "$ROOT_DIR/scripts/verify-no-secrets.sh"
       if command -v just >/dev/null 2>&1; then
         (cd "$ROOT_DIR" && just private-risk-audit)
@@ -258,15 +296,17 @@ run_bootstrap() {
   if [[ "$ACTION" == "apply" ]] && bool_is_true "$ASSUME_YES"; then
     bootstrap_args+=(--yes)
   fi
+  trace_step "2/3" "bootstrap engine: profile=$PROFILE tier=$TIER action=$ACTION"
   "$ROOT_DIR/bootstrap.sh" "${bootstrap_args[@]}"
 }
 
 print_plan
 if [[ "$ACTION" == "plan-only" ]]; then
-  success "plan rendered; no changes made"
+  success "plan rendered; no changes made (run id: $RUN_ID)"
   exit 0
 fi
 confirm_apply
 run_audits
 run_bootstrap
+trace_step "3/3" "installer complete: run id $RUN_ID"
 success "installer complete"
