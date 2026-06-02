@@ -1,6 +1,6 @@
 # workstation-bootstrap
 
-Alan의 macOS + Ubuntu 개발 환경을 새 컴퓨터에 재현하기 위한 **Init v2 / workstation bootstrap repo**입니다. 목표는 `oh-my-zsh`처럼 첫 명령이 자연스럽고, 필요하면 profile/tier/audit 옵션을 세밀하게 고를 수 있는 설치 흐름입니다.
+Alan의 macOS + Ubuntu 개발 환경을 새 컴퓨터에 재현하기 위한 **Init v2 / workstation bootstrap repo**입니다. 첫 경험은 `oh-my-zsh`처럼 단순해야 하므로, 사용자는 `./install.sh`만 실행하고 profile/tier/audit/apply 여부는 터미널 인터페이스에서 고릅니다.
 
 > 현재 Linux 범위는 **Ubuntu 24.04 LTS 계열**입니다. Fedora/Arch/Nix는 의도적으로 보류합니다.
 
@@ -12,16 +12,30 @@ cd ~/Workspace/src/Management/terminal
 ./install.sh
 ```
 
-`./install.sh`는 TTY에서는 메뉴를 띄우고, 기본값은 **dry-run preview**입니다. 실제 적용은 `APPLY`를 직접 입력하거나 `--yes`를 줘야 합니다.
+`install.sh`의 원칙:
 
-자주 쓰는 흐름:
+- 설치 선택지는 커맨드라인 파라미터가 아니라 **번호 선택 메뉴(드롭다운 같은 TTY 인터페이스)**로 고릅니다.
+- Enter를 누르면 안전한 기본값으로 진행합니다.
+- 기본 action은 **preview/dry-run**입니다.
+- 실제 적용은 메뉴에서 `apply`를 고른 뒤 `APPLY`를 직접 입력해야 합니다.
+- 자동화/CI/디버깅이 필요할 때만 하위 엔진인 `bootstrap.sh`를 직접 호출합니다.
 
-```bash
-./install.sh --plan-only --tier cli             # 무엇을 할지 보기만 함
-./install.sh --dry-run --tier cli               # 터미널/CLI 환경 preview
-./install.sh --apply --tier minimal             # 최소 적용; 확인 프롬프트 있음
-./install.sh --apply --tier full --yes          # 전체 적용; 비대화형 명시 승인
-```
+메뉴 흐름:
+
+1. **Profile** — `personal`, `work`, `minimal`, `ci`
+2. **Install tier** — `minimal`, `cli`, `full`, `ci`
+3. **Preflight audit** — `standard`, `full`, `none`
+4. **Action** — `preview`, `apply`, `plan only`, `quit`
+
+일반적인 선택:
+
+| 원하는 결과 | 메뉴에서 고를 값 |
+| --- | --- |
+| 무엇이 실행될지만 확인 | `personal` → `cli` → `standard` → `plan only` |
+| 터미널/CLI 환경 안전 preview | `personal` → `cli` → `standard` → `preview` |
+| 최소 dotfile/base tool 적용 | `minimal` → `minimal` → `standard` → `apply` |
+| Mac 전체 GUI/MAS/VS Code까지 preview | `personal` → `full` → `full` → `preview` |
+| CI/container 검증 | `ci` → `ci` → `none` 또는 `standard` → `preview` |
 
 ## 설치 선택지
 
@@ -51,19 +65,11 @@ cd ~/Workspace/src/Management/terminal
 | `standard` | `scripts/verify-no-secrets.sh` + `just private-risk-audit`. 기본값 |
 | `full` | standard + `just public-audit` |
 
-예시:
-
-```bash
-./install.sh --dry-run --profile personal --tier full --audit full
-./install.sh --apply --profile minimal --tier minimal --audit standard
-./install.sh --dry-run --tier ci --audit none --yes
-```
-
 ## 설치가 실제로 하는 일
 
-`install.sh`는 UX wrapper입니다. 실제 작업은 계속 `bootstrap.sh`가 수행합니다.
+`install.sh`는 첫 실행 UX wrapper입니다. 실제 작업은 계속 `bootstrap.sh`가 수행합니다.
 
-1. preflight audit 선택 실행
+1. 선택한 preflight audit 실행
 2. `scripts/doctor.sh`
 3. macOS CLT 또는 Ubuntu apt prerequisites
 4. Homebrew/Linuxbrew 확인 또는 설치
@@ -74,7 +80,7 @@ cd ~/Workspace/src/Management/terminal
 9. macOS/Linux defaults
 10. `scripts/verify-new-machine.sh`
 
-직접 엔진을 호출할 수도 있습니다.
+고급 자동화나 테스트에서는 엔진을 직접 호출할 수 있습니다. 단, 새 컴퓨터에서 사람이 쓰는 기본 경로는 항상 `./install.sh`입니다.
 
 ```bash
 ./bootstrap.sh --dry-run --profile personal --tier cli
@@ -114,7 +120,7 @@ export POLLINATIONS_API_KEY="$(op read 'op://<vault>/<item>/<field>')"
 ```bash
 scripts/verify-no-secrets.sh
 just private-risk-audit
-./install.sh --dry-run --tier cli
+./bootstrap.sh --dry-run --tier cli
 chezmoi diff --source .
 ```
 
@@ -190,15 +196,15 @@ just ubuntu-smoke
 
 - **핵심 유지:** `install.sh`, `bootstrap.sh`, `Justfile`, `packages/`, `scripts/install-*`, `scripts/verify-*`, `.chezmoi*`, terminal dotfiles, backup/restore scripts.
 - **고급/정책 문서로 유지:** security/public/private/readiness/backup docs.
-- **레거시이지만 당장 삭제하지 않음:** `masterplan.md`, `scripts/sanitize-import.sh`, `import-init*` recipes. Init provenance와 재-import 안전장치라 quick start에서는 숨기되 보존합니다.
+- **레거시이지만 당장 삭제하지 않음:** `masterplan.md`, `scripts/sanitize-import.sh`, `import-init*` recipes. Init provenance와 re-import 안전장치라 quick start에서는 숨기되 보존합니다.
 - **미래 cleanup 후보:** Nix phase note, 너무 작은 platform docs, import-init tooling은 bootstrap이 실제 머신에서 충분히 검증된 뒤 archive/remove 여부 결정.
 
 자세한 검토: `docs/repo-surface-review.md`
 
 ## Repo layout
 
-- `install.sh` — friendly first-run installer wrapper
-- `bootstrap.sh` — deterministic bootstrap engine
+- `install.sh` — interface-first first-run installer wrapper
+- `bootstrap.sh` — deterministic bootstrap engine for automation/testing
 - `packages/` — Homebrew, MAS, apt, VS Code, language-tool manifests
 - `backup/` — user directory backup manifest/excludes
 - `scripts/` — install/audit/backup/restore/verification scripts

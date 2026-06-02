@@ -10,7 +10,7 @@ The repo is not fundamentally bloated, but its **first-run surface was too noisy
 
 | Surface | Why keep |
 | --- | --- |
-| `install.sh` | Friendly entrypoint with dry-run default, menu/flags, profile/tier/audit selection. |
+| `install.sh` | Interface-first entrypoint: one command, numbered menu choices, dry-run default, no normal install flags. |
 | `bootstrap.sh` | Deterministic install engine used by the wrapper and scripts. |
 | `Justfile` | Discoverable local task index. |
 | `packages/` | Declarative install manifests for Homebrew, MAS, apt, VS Code, npm/bun/uv/cargo. |
@@ -54,11 +54,11 @@ The polished path is:
 ./install.sh
 ```
 
-Advanced users can still run:
+Advanced automation/debugging can still run the lower-level engine:
 
 ```bash
 ./bootstrap.sh --dry-run --profile personal --tier cli
 just --list
 ```
 
-This keeps the repo powerful without making the first-run experience feel like reading the entire migration history.
+This keeps the first-run experience menu-driven while preserving deterministic lower-level commands for tests and CI.

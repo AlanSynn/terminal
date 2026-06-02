@@ -7,53 +7,41 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=scripts/lib/os.sh
 . "$ROOT_DIR/scripts/lib/os.sh"
 
-PROFILE="personal"
-TIER="cli"
-ACTION="dry-run"
-AUDIT_LEVEL="standard"
-ASSUME_YES=0
-PLAN_ONLY=0
-PROMPT=auto
-MENU=auto
-SAW_OPTION=0
+PROFILE="${WB_INSTALL_PROFILE:-personal}"
+TIER="${WB_INSTALL_TIER:-cli}"
+AUDIT_LEVEL="${WB_INSTALL_AUDIT:-standard}"
+ACTION="${WB_INSTALL_ACTION:-dry-run}"
+ASSUME_YES="${WB_INSTALL_ASSUME_YES:-0}"
 
 usage() {
   cat <<'USAGE'
-Usage: ./install.sh [options]
+Usage: ./install.sh
 
-A friendly workstation-bootstrap installer. It wraps bootstrap.sh and defaults to
-safe preview mode, then lets you choose how much of the workstation to apply.
+Run the installer and choose everything from the terminal interface.
+There are no normal install flags: profile, tier, audit level, and action are
+selected in the menu so a new machine setup starts with one command.
 
-Common starts:
-  ./install.sh                                # interactive menu when a TTY exists
-  ./install.sh --dry-run --tier cli           # preview terminal/CLI setup
-  ./install.sh --apply --tier minimal         # real minimal apply; asks to confirm
-  ./install.sh --apply --tier full --yes      # non-interactive full apply
-  ./install.sh --plan-only --tier full        # show what would run, then exit
+Menu flow:
+  1. Profile        personal / work / minimal / ci
+  2. Install tier   minimal / cli / full / ci
+  3. Audit level    standard / full / none
+  4. Action         preview / apply / plan only / quit
 
-Options:
-  --profile personal|work|minimal|ci          dotfile/profile data passed to chezmoi
-  --tier minimal|cli|full|ci                  install scope; default: cli
-  --dry-run                                   preview only; default action
-  --apply                                     perform real bootstrap apply
-  --audit none|standard|full                  preflight audit level; default: standard
-                                               none     = skip installer preflight audits
-                                               standard = secret scan + private risk report
-                                               full     = standard + public readiness audit
-  --skip-audits                               alias for --audit none
-  --plan-only                                 print selected plan and commands only
-  --yes, -y                                   do not prompt; required for non-TTY apply
-  --menu                                      force the interactive menu
-  --no-prompt                                 never prompt; fail apply unless --yes
-  --help, -h                                  show this help
+Safety:
+  - The default action is preview only.
+  - Real apply asks you to type APPLY.
+  - Non-interactive real apply is refused unless CI explicitly sets approval.
 
-Tiers:
-  minimal  native prerequisites, Homebrew/Linuxbrew, common packages, dotfiles
-  cli      minimal + language tools and shared CLI tooling; recommended default
-  full     cli + macOS GUI casks, MAS apps, VS Code extensions, OS defaults
-  ci       validation/container-friendly path
+Advanced automation should call bootstrap.sh directly or use the test recipes.
 USAGE
 }
+
+if [[ $# -gt 0 ]]; then
+  case "$1" in
+    --help|-h) usage; exit 0 ;;
+    *) die "install choices are selected through the interface; run ./install.sh" ;;
+  esac
+fi
 
 validate_profile() {
   case "$1" in personal|work|minimal|ci) ;; *) die "unsupported profile: $1" ;; esac
@@ -64,87 +52,145 @@ validate_tier() {
 validate_audit() {
   case "$1" in none|standard|full) ;; *) die "unsupported audit level: $1" ;; esac
 }
+validate_action() {
+  case "$1" in dry-run|preview|apply|plan-only|plan|quit) ;; *) die "unsupported action: $1" ;; esac
+}
+validate_bool() {
+  case "$1" in 0|1|true|false|yes|no) ;; *) die "unsupported boolean value: $1" ;; esac
+}
+bool_is_true() {
+  case "$1" in 1|true|yes) return 0 ;; *) return 1 ;; esac
+}
 
-while [[ $# -gt 0 ]]; do
+is_tty() { [[ -t 0 && -t 1 ]]; }
+
+normalize_action() {
   case "$1" in
-    --profile) SAW_OPTION=1; PROFILE="${2:?missing profile}"; shift 2 ;;
-    --tier) SAW_OPTION=1; TIER="${2:?missing tier}"; shift 2 ;;
-    --dry-run|--preview) SAW_OPTION=1; ACTION="dry-run"; shift ;;
-    --apply) SAW_OPTION=1; ACTION="apply"; shift ;;
-    --audit) SAW_OPTION=1; AUDIT_LEVEL="${2:?missing audit level}"; shift 2 ;;
-    --skip-audits|--no-audit|--no-audits) SAW_OPTION=1; AUDIT_LEVEL="none"; shift ;;
-    --plan-only) SAW_OPTION=1; PLAN_ONLY=1; shift ;;
-    --yes|-y) SAW_OPTION=1; ASSUME_YES=1; shift ;;
-    --menu) MENU=always; shift ;;
-    --no-prompt|--non-interactive) SAW_OPTION=1; PROMPT=never; shift ;;
-    --help|-h) usage; exit 0 ;;
-    *) die "unknown option: $1" ;;
+    preview) printf 'dry-run\n' ;;
+    plan) printf 'plan-only\n' ;;
+    *) printf '%s\n' "$1" ;;
   esac
-done
+}
+
+menu_choice() {
+  local title="$1" current="$2" default_value="$3"
+  shift 3
+  local specs=("$@")
+  local answer value label i
+
+  if ! is_tty; then
+    printf '%s\n' "${current:-$default_value}"
+    return 0
+  fi
+
+  while true; do
+    printf '\n%s\n' "$title" > /dev/tty
+    printf '%s\n' "$(printf '%*s' "${#title}" '' | tr ' ' '-')" > /dev/tty
+    i=1
+    for spec in "${specs[@]}"; do
+      value="${spec%%|*}"
+      label="${spec#*|}"
+      if [[ "$value" == "${current:-$default_value}" ]]; then
+        printf '  %d) %s  [default]\n' "$i" "$label" > /dev/tty
+      else
+        printf '  %d) %s\n' "$i" "$label" > /dev/tty
+      fi
+      i=$((i + 1))
+    done
+    printf 'Choose 1-%d [%s]: ' "${#specs[@]}" "${current:-$default_value}" > /dev/tty
+    IFS= read -r answer < /dev/tty || answer=""
+    answer="${answer:-${current:-$default_value}}"
+
+    if [[ "$answer" =~ ^[0-9]+$ ]] && (( answer >= 1 && answer <= ${#specs[@]} )); then
+      value="${specs[$((answer - 1))]%%|*}"
+      printf '%s\n' "$value"
+      return 0
+    fi
+    for spec in "${specs[@]}"; do
+      value="${spec%%|*}"
+      if [[ "$answer" == "$value" ]]; then
+        printf '%s\n' "$value"
+        return 0
+      fi
+    done
+    warn "invalid choice: $answer"
+  done
+}
+
+select_from_interface() {
+  if is_tty; then
+    cat > /dev/tty <<'BANNER'
+
+workstation-bootstrap installer
+-------------------------------
+Run one command, choose from the interface, preview first, apply only when ready.
+BANNER
+  else
+    info "non-interactive mode: using WB_INSTALL_* environment/default selections"
+  fi
+
+  PROFILE="$(menu_choice 'Profile' "$PROFILE" 'personal' \
+    'personal|personal — normal personal workstation' \
+    'work|work — reserved work profile' \
+    'minimal|minimal — smallest dotfile/profile layer' \
+    'ci|ci — validation/container profile')"
+  validate_profile "$PROFILE"
+
+  TIER="$(menu_choice 'Install tier' "$TIER" 'cli' \
+    'minimal|minimal — native prereqs, brew/linuxbrew, common packages, dotfiles' \
+    'cli|cli — minimal + language tools and shared CLI tooling' \
+    'full|full — cli + macOS GUI apps, MAS, VS Code extensions, OS defaults' \
+    'ci|ci — validation/container-friendly path')"
+  validate_tier "$TIER"
+
+  AUDIT_LEVEL="$(menu_choice 'Preflight audit' "$AUDIT_LEVEL" 'standard' \
+    'standard|standard — secret scan + private risk report' \
+    'full|full — standard + public readiness audit' \
+    'none|none — skip installer preflight audits')"
+  validate_audit "$AUDIT_LEVEL"
+
+  ACTION="$(menu_choice 'Action' "$ACTION" 'dry-run' \
+    'dry-run|preview — show and run safe dry-run bootstrap' \
+    'apply|apply — real bootstrap apply; asks for APPLY confirmation' \
+    'plan-only|plan only — print selected plan and exit' \
+    'quit|quit — exit without running anything')"
+  ACTION="$(normalize_action "$ACTION")"
+  validate_action "$ACTION"
+}
 
 validate_profile "$PROFILE"
 validate_tier "$TIER"
 validate_audit "$AUDIT_LEVEL"
+ACTION="$(normalize_action "$ACTION")"
+validate_action "$ACTION"
+validate_bool "$ASSUME_YES"
 
-is_tty() { [[ -t 0 && -t 1 && "$PROMPT" != "never" ]]; }
+select_from_interface
 
-choose_from_list() {
-  local label="$1" current="$2" values="$3" answer
-  printf '%s [%s] (%s): ' "$label" "$current" "$values"
-  IFS= read -r answer || answer=""
-  printf '%s\n' "${answer:-$current}"
-}
-
-maybe_prompt() {
-  is_tty || return 0
-  if [[ "$MENU" != "always" && "$SAW_OPTION" == "1" ]]; then
-    return 0
-  fi
-  cat <<'BANNER'
-
-workstation-bootstrap
----------------------
-A safe, staged installer for this Mac/Ubuntu developer environment.
-Default action is preview only; real apply always asks before it runs.
-BANNER
-
-  PROFILE="$(choose_from_list 'Profile' "$PROFILE" 'personal work minimal ci')"
-  validate_profile "$PROFILE"
-  TIER="$(choose_from_list 'Tier' "$TIER" 'minimal cli full ci')"
-  validate_tier "$TIER"
-  AUDIT_LEVEL="$(choose_from_list 'Preflight audit' "$AUDIT_LEVEL" 'none standard full')"
-  validate_audit "$AUDIT_LEVEL"
-
-  local action_answer
-  printf 'Action [dry-run] (dry-run apply plan-only quit): '
-  IFS= read -r action_answer || action_answer=""
-  action_answer="${action_answer:-dry-run}"
-  case "$action_answer" in
-    dry-run|preview) ACTION="dry-run" ;;
-    apply) ACTION="apply" ;;
-    plan-only|plan) PLAN_ONLY=1 ;;
-    quit|q|exit) info "aborted before any action"; exit 0 ;;
-    *) die "unsupported action: $action_answer" ;;
-  esac
-}
+if [[ "$ACTION" == "quit" ]]; then
+  info "aborted before any action"
+  exit 0
+fi
 
 print_plan() {
   local bootstrap_args=(--profile "$PROFILE" --tier "$TIER")
   [[ "$ACTION" == "dry-run" ]] && bootstrap_args+=(--dry-run)
-  [[ "$ASSUME_YES" == "1" ]] && bootstrap_args+=(--yes)
+  if [[ "$ACTION" == "apply" ]] && bool_is_true "$ASSUME_YES"; then
+    bootstrap_args+=(--yes)
+  fi
 
   cat <<PLAN
 
-Plan
-----
+Selected plan
+-------------
 repo:     $ROOT_DIR
 os:       $(detect_os) / $(detect_arch)
 profile:  $PROFILE
 tier:     $TIER
-action:   $ACTION
 audit:    $AUDIT_LEVEL
+action:   $ACTION
 
-Bootstrap command:
+Bootstrap engine command:
   ./bootstrap.sh ${bootstrap_args[*]}
 PLAN
 
@@ -152,7 +198,7 @@ PLAN
     none)
       cat <<'PLAN'
 Preflight audits:
-  (skipped by request)
+  (skipped by menu selection)
 PLAN
       ;;
     standard)
@@ -175,15 +221,15 @@ PLAN
 
 confirm_apply() {
   [[ "$ACTION" == "apply" ]] || return 0
-  if [[ "$ASSUME_YES" == "1" ]]; then
+  if bool_is_true "$ASSUME_YES"; then
     return 0
   fi
   if ! is_tty; then
-    die "real apply requires --yes in non-interactive mode"
+    die "real apply requires interactive APPLY confirmation"
   fi
   local answer
-  printf '\nType APPLY to run a real %s/%s bootstrap: ' "$PROFILE" "$TIER"
-  IFS= read -r answer || answer=""
+  printf '\nType APPLY to run a real %s/%s bootstrap: ' "$PROFILE" "$TIER" > /dev/tty
+  IFS= read -r answer < /dev/tty || answer=""
   [[ "$answer" == "APPLY" ]] || die "apply cancelled"
 }
 
@@ -209,13 +255,14 @@ run_audits() {
 run_bootstrap() {
   local bootstrap_args=(--profile "$PROFILE" --tier "$TIER")
   [[ "$ACTION" == "dry-run" ]] && bootstrap_args+=(--dry-run)
-  [[ "$ASSUME_YES" == "1" ]] && bootstrap_args+=(--yes)
+  if [[ "$ACTION" == "apply" ]] && bool_is_true "$ASSUME_YES"; then
+    bootstrap_args+=(--yes)
+  fi
   "$ROOT_DIR/bootstrap.sh" "${bootstrap_args[@]}"
 }
 
-maybe_prompt
 print_plan
-if [[ "$PLAN_ONLY" == "1" ]]; then
+if [[ "$ACTION" == "plan-only" ]]; then
   success "plan rendered; no changes made"
   exit 0
 fi

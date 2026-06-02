@@ -1,6 +1,6 @@
 # Bootstrap Flow
 
-The friendly entrypoint is `./install.sh`; it wraps `./bootstrap.sh`, which remains the deterministic engine. The flow is intentionally staged so a fresh machine can start with a safe dry-run and then graduate to real install tiers.
+The friendly entrypoint is `./install.sh`; it presents an interface-first terminal menu and wraps `./bootstrap.sh`, which remains the deterministic engine. The flow is intentionally staged so a fresh machine can start with one command, choose a safe dry-run/plan/apply action in the interface, and then graduate to real install tiers.
 
 ## Tiers
 
@@ -21,7 +21,7 @@ The friendly entrypoint is `./install.sh`; it wraps `./bootstrap.sh`, which rema
 8. OS defaults run only for explicit target/tier branches.
 9. `scripts/verify-new-machine.sh` runs final safety and syntax checks.
 
-Dry-run mode sets `BOOTSTRAP_DRY_RUN=1`; install scripts print the commands they would run rather than mutating the host.
+When the menu action is preview/dry-run, the wrapper calls the engine in dry-run mode. Dry-run mode sets `BOOTSTRAP_DRY_RUN=1`; install scripts print the commands they would run rather than mutating the host.
 
 
 ## Inventory curation
