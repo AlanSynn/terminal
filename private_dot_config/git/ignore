@@ -1,8 +1,77 @@
-# Managed global git ignore
+# Global Git Ignore - Managed by Chezmoi
+
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Linux
+*~
+.fuse_hidden*
+.nfs*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Editors
 *.swp
 *.swo
+*~
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+.settings/
+
+# Environment
 .env
-.env.*
+.env.local
+.env.*.local
+*.local
+
+# Dependencies
+node_modules/
+vendor/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Build artifacts
+*.o
+*.a
+*.so
+*.dylib
+dist/
+build/
+*.egg-info/
+
+# Logs
+*.log
+logs/
+
+# Temporary
+tmp/
+temp/
+*.tmp
+*.bak
+
+# Secrets (never commit)
+*.pem
+*.key
+id_rsa*
+*.p12
 credentials.json
 secrets.json
+
+**/.claude/settings.local.json
+
+# opencode
+.sisyphus/
+.opencode/

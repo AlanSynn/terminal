@@ -1,0 +1,424 @@
+#!/usr/bin/env bash
+# Author: Alan Synn
+# Email: alan@alansynn.com
+# Description: Custom functions as utilities (zsh/bash compatible)
+
+# Revision history
+# 2025-03-30 Initial version
+
+########################################################
+# Settings
+########################################################
+
+# ANSI Colors
+ANSI_RED="\033[31m"
+ANSI_GREEN="\033[32m"
+ANSI_YELLOW="\033[33m"
+ANSI_BLUE="\033[34m"
+ANSI_MAGENTA="\033[35m"
+ANSI_CYAN="\033[36m"
+ANSI_RESET="\033[0m"
+
+########################################################
+# Git
+########################################################
+
+gpgconf --kill gpg-agent
+
+normalize_commit_date() {
+    # Try GNU coreutils 'gdate' (macOS via brew), then GNU 'date -d', else fallback to raw.
+    local raw="$1"
+    if command -v gdate >/dev/null 2>&1; then
+        gdate -d "$raw" -R 2>/dev/null && return 0
+    fi
+    if date -d "$raw" -R >/dev/null 2>&1; then
+        date -d "$raw" -R 2>/dev/null && return 0
+    fi
+    # BSD 'date' lacks -d; let Git parse the raw string itself.
+    printf "%s" "$raw"
+    return 0
+}
+
+sanitize_llm_commit() {
+    # Strip surrounding code fences and lone triple-backtick lines; unquote a single-line message in quotes.
+    sed -E '/^```+/d' | sed -E '1s/^"(.*)"$/\1/' | sed -E '$s/^"(.*)"$/\1/'
+}
+
+# --- gcllm with --date support ---
+gcllm() {
+    local user_note=""
+    local run_gistory=0
+    local gistory_command_args=()
+    local commit_date_raw=""
+    local commit_date_rfc2822=""
+
+    # --- parse options first (so user_note detection won't eat them) ---
+    # supports: --date YYYY-MM-DD[,HH:MM[:SS]] or any format GNU `date -d` understands
+    # also supports: --date=...
+    local args=()
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -b|--bulk)
+                run_gistory=1
+                shift
+                # everything remaining belongs to gistory
+                gistory_command_args=("$@")
+                break
+                ;;
+            --date=*)
+                commit_date_raw="${1#*=}"
+                shift
+                ;;
+            --date)
+                shift
+                commit_date_raw="$1"
+                shift
+                ;;
+            *)  # stash to reprocess for user_note detection
+                args+=("$1")
+                shift
+                ;;
+        esac
+    done
+    # restore non-date args for existing logic
+    set -- "${args[@]}"
+
+    # gistory branch
+    if (( run_gistory )); then
+        printf "${ANSI_GREEN}Executing gistory with arguments: %s...${ANSI_RESET}\n" "${gistory_command_args[*]}"
+        gistory "${gistory_command_args[@]}"
+        return $?
+    fi
+
+    # user_note: first non-option token (kept behavior)
+    if [[ $# -gt 0 && "$1" != -* ]]; then
+        user_note="$1"
+    fi
+
+    # tools check
+    if ! command -v llm &>/dev/null; then
+        printf "${ANSI_RED}llm could not be found${ANSI_RESET}\n"
+        printf "${ANSI_RED}Please install it with 'uv tool install llm'${ANSI_RESET}\n"
+        return 1
+    fi
+    if ! command -v git &>/dev/null; then
+        printf "${ANSI_RED}git could not be found${ANSI_RESET}\n"
+        return 1
+    fi
+
+    # repo state & diffs
+    if git status &>/dev/null; then
+        if git log -1 &>/dev/null; then
+            local diffs
+            diffs=$(git diff --staged HEAD)
+        else
+            printf "${ANSI_GREEN}You are committing the first commit!${ANSI_RESET}\n"
+            local diffs
+            diffs=$(git diff --staged)
+        fi
+    else
+        printf "${ANSI_RED}Not a git repository${ANSI_RESET}\n"
+        return 1
+    fi
+    if [ -z "$diffs" ]; then
+        printf "${ANSI_RED}No changes to commit${ANSI_RESET}\n"
+        return 1
+    fi
+
+    # prepend user note
+    if [ -n "$user_note" ]; then
+        printf "${ANSI_GREEN}✍️ User note: %s${ANSI_RESET}\n" "$user_note"
+        diffs="MESSAGE FROM USER: ${user_note}\n\n${diffs}"
+    fi
+
+    # token budget
+    diffs=$(printf "%s" "$diffs" | head -c 128000)
+
+    # 1) Synthesize commit message
+    local commit_message
+    commit_message=$(printf "%s" "$diffs" | llm -m openrouter/openai/gpt-oss-120b -t git-commit-message)
+    commit_message=$(printf "%s" "$commit_message" | sanitize_llm_commit)
+
+    # Extract title/body after sanitization
+    local title body
+    title=$(printf "%s" "$commit_message" | awk 'NR==1{print; exit}')
+    body=$(printf "%s" "$commit_message" | awk 'NR>1{print}')
+
+    # Ensure body has bullet newlines if needed
+    if ! printf "%s" "$body" | grep -qE '\n'; then
+        body=$(printf "%s" "$body" | sed 's/ - / - /1; s/ - /\n- /g')
+    fi
+
+    printf "🧠 ${ANSI_CYAN}Here's a commit message for your changes:${ANSI_RESET}\n"
+    printf "${ANSI_CYAN}Title:${ANSI_RESET} %s\n" "$title"
+    printf "${ANSI_CYAN}Body:${ANSI_RESET}\n%s\n" "$body"
+
+    # 2) Normalize (but never reject) --date
+    local commit_date_str=""
+    if [ -n "$commit_date_raw" ]; then
+        commit_date_str=$(normalize_commit_date "$commit_date_raw")
+        printf "${ANSI_GREEN}🕒 Using commit date:${ANSI_RESET} %s\n" "$commit_date_str"
+    fi
+
+    # 3) Confirm and commit
+    local commit
+    if [ -n "$BASH_VERSION" ]; then
+        read -p "🧠 ${ANSI_CYAN}Commit these changes?${ANSI_RESET} (y/n): " commit
+    else
+        printf "🧠 ${ANSI_CYAN}Commit these changes?${ANSI_RESET} (y/n): "; read commit
+    fi
+
+    if [ "$commit" = "y" ]; then
+        printf "${ANSI_GREEN}Committing changes...${ANSI_RESET}\n"
+        printf "${ANSI_MAGENTA}%s${ANSI_RESET}\n" "$title"
+        printf "${ANSI_MAGENTA}%s${ANSI_RESET}\n" "$body"
+
+        if [ -n "$commit_date_str" ]; then
+            GIT_AUTHOR_DATE="$commit_date_str" \
+            GIT_COMMITTER_DATE="$commit_date_str" \
+            git commit -S -m "$title" -m "$body" --date "$commit_date_str"
+        else
+            git commit -S -m "$title" -m "$body"
+        fi
+
+        if [ $? -ne 0 ]; then
+            printf "${ANSI_RED}Pre-commit hooks or commit failed. Aborting.${ANSI_RESET}\n"
+            return 1
+        fi
+    fi
+
+    # push?
+    if ! git remote -v &>/dev/null; then
+        printf "${ANSI_RED}No remote repository found${ANSI_RESET}\n"
+        return 0
+    fi
+    local push
+    if [ "$commit" = "y" ]; then
+        if [ -n "$BASH_VERSION" ]; then
+            read -p "🧠 ${ANSI_CYAN}Push these changes to the remote repository?${ANSI_RESET} (y/n): " push
+        else
+            printf "🧠 ${ANSI_CYAN}Push these changes to the remote repository?${ANSI_RESET} (y/n): "
+            read push
+        fi
+    fi
+    if [ "$push" = "y" ]; then
+        git push
+    fi
+}
+
+# --- git wrapper that forwards --date to gcllm ---
+git_commit_wrapper() {
+    if [[ "$1" == "commit" ]]; then
+        shift
+
+        local commit_message=""
+        local other_args=()
+        local date_flag=""
+        local date_value=""
+
+        while [[ $# -gt 0 ]]; do
+            case "$1" in
+                -m)
+                    commit_message="$2"
+                    shift 2
+                    ;;
+                --date=*)
+                    date_value="${1#*=}"
+                    date_flag="--date"
+                    shift
+                    ;;
+                --date)
+                    date_flag="--date"
+                    shift
+                    date_value="$1"
+                    shift
+                    ;;
+                *)
+                    other_args+=("$1")
+                    shift
+                    ;;
+            esac
+        done
+
+        if [[ -n "$commit_message" ]]; then
+            printf "${ANSI_YELLOW}Routing git commit -m to gcllm...${ANSI_RESET}\n"
+            if [[ -n "$date_flag" ]]; then
+                gcllm --date="$date_value" "$commit_message"
+            else
+                gcllm "$commit_message"
+            fi
+            return $?
+        else
+            command git commit "${other_args[@]}"
+            return $?
+        fi
+    fi
+
+    command git "$@"
+}
+
+# alias git='git_commit_wrapper'
+
+### Stash changes with google-genai
+gstashllm() {
+    # Capture the first argument if provided
+    local user_note="$1"
+
+    # Check if llm is installed
+    if ! command -v llm &> /dev/null; then
+        printf "${ANSI_RED}llm could not be found${ANSI_RESET}\n"
+        printf "${ANSI_RED}Please install it with 'uv tool install llm'${ANSI_RESET}\n"
+        return 1
+    fi
+
+    # Check if git is installed
+    if ! command -v git &> /dev/null; then
+        printf "${ANSI_RED}git could not be found${ANSI_RESET}\n"
+        return 1
+    fi
+
+    # Check if there's no diffs
+    local diffs=$(git diff HEAD)
+    if [ -z "$diffs" ]; then
+        printf "${ANSI_RED}No changes to stash${ANSI_RESET}\n"
+        return 1
+    fi
+
+    # Cut the diffs to first 128000 tokens
+    diffs=$(printf "%s" "$diffs" | head -c 120000)
+
+    # Append user note if provided
+    if [ -n "$user_note" ]; then
+        # Add a blank line before the note for better separation
+        diffs="${diffs}\nIMPORTANT: ${user_note}"
+    fi
+
+    # Call llm with the prompt
+    local stash_message=$(printf "%s" "$diffs" | llm -t git-stash-message)
+
+    # Check if the user wants to stash the changes
+    printf "🧠 ${ANSI_CYAN}Here's a stash message for your changes:${ANSI_RESET}\n"
+    printf "%s\n\n" "$stash_message"
+
+    # Shell-agnostic prompt handling
+    if [ -n "$BASH_VERSION" ]; then
+        read -p "🧠 ${ANSI_CYAN}Stash these changes?${ANSI_RESET} (y/n): " stash
+    elif [ -n "$ZSH_VERSION" ]; then
+        printf "🧠 ${ANSI_CYAN}Stash these changes?${ANSI_RESET} (y/n): "
+        read stash
+    else
+        printf "🧠 ${ANSI_CYAN}Stash these changes?${ANSI_RESET} (y/n): "
+        read stash
+    fi
+
+    if [ "$stash" = "y" ]; then
+        # Get title and body of commit message
+        local title=$(printf "%s" "$stash_message" | head -n 1)
+
+        printf "${ANSI_GREEN}Stashing changes...${ANSI_RESET}\n"
+        printf "${ANSI_GREEN}%s${ANSI_RESET}\n" "$title"
+
+        # Stash the changes
+        git stash push -m "$title"
+    fi
+}
+
+### Generate .gitignore file from gitignore.io
+gi() {
+    # curl -sLw \"\\\n\" https://www.toptal.com/developers/gitignore/api/python;
+
+    # Save the .gitignore file to the current directory
+    local gitignore_content=$(curl -sLw \"\\\n\" https://www.toptal.com/developers/gitignore/api/"$@")
+
+    # Remove last two lines of the content
+    gitignore_content=$(printf "%s" "$gitignore_content" | sed '$d' | sed '$d')
+
+    # If .gitignore already exists copy the content to .gitignore.old
+    if [ -f .gitignore ]; then
+        mv .gitignore .gitignore.old
+    fi
+
+    # Save the gitignore content multi-line to the .gitignore file
+    printf "%s\n" "$gitignore_content" > .gitignore
+
+    printf "\n" >> .gitignore
+
+    # TODO: Add the old gitignore content to the new gitignore if it's not already in the new gitignore
+    # # # If .gitignore.old exists copy the content to .gitignore if it's not already in .gitignore
+    # old_gitignore_content=$(cat .gitignore.old)
+    # for line in $old_gitignore_content; do
+    #     if ! grep -q "$line" .gitignore; then
+    #         echo "$line" >> .gitignore
+    #     fi
+    # done
+
+    # rm .gitignore.old
+}
+
+### Ask llm to suggest templates from https://github.com/toptal/gitignore/tree/master/templates
+gillm() {
+    # Get only <tbody> of the page
+    local templates=$(curl -sL https://github.com/toptal/gitignore/tree/master/templates | grep -o '<tbody>.*?</tbody>' | sed 's/<tbody>//;s/<\/tbody>//')
+    printf "%s\n" "$templates"
+
+    local diff=$(tree -a -L 4 .)
+    local templates_list=$(llm -s "Suggest gitignore.io templates of current directory from the list of templates in the repo, Say only the template name, no other text. Example: python,macos,node from {$templates}" "current directory: {$diff}")
+    printf "%s\n" "$templates_list"
+}
+
+### Suggest gitignore.io rules with llm
+
+
+########################################################
+# Docker
+########################################################
+
+dps() {
+    docker ps --format "table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}"
+}
+
+dpsa() {
+    docker ps -a --format "table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}"
+}
+
+########################################################
+# Python
+########################################################
+
+vcreate() {
+    python -m venv .venv
+}
+
+vactivate() {
+    if [ -f .venv/bin/activate ]; then
+        . .venv/bin/activate
+    else
+        printf "${ANSI_RED}Virtual environment not found${ANSI_RESET}\n"
+        return 1
+    fi
+}
+
+vdeactivate() {
+    # Check if venv is activated
+    if [ -n "$VIRTUAL_ENV" ]; then
+        printf "${ANSI_RED}Venv is activated${ANSI_RESET}\n"
+        deactivate
+    fi
+    # Check if conda is activated
+    if [ -n "$CONDA_PREFIX" ]; then
+        printf "${ANSI_RED}Conda is activated${ANSI_RESET}\n"
+        conda deactivate
+    fi
+}
+
+########################################################
+# Python
+########################################################
+
+# Remove all __pycache__ directories
+pyclean() {
+    find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null
+    find . -type f -name "*.pyc" -exec rm -f {} + 2>/dev/null
+    find . -type f -name "*.pyo" -exec rm -f {} + 2>/dev/null
+    find . -type f -name "*.pyd" -exec rm -f {} + 2>/dev/null
+}

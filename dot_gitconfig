@@ -1,0 +1,95 @@
+# Git Configuration - Managed by Chezmoi
+# Alan Synn <alan@alansynn.com>
+
+[user]
+	name = Alan Synn
+	email = alan@alansynn.com
+	signingkey = ECDC784FF349B8B5
+    # signingkey = {{ onepasswordRead "op://Personal/gpg-signing-key/key-id" }}
+
+[credential]
+    helper = store
+
+[core]
+    excludesFile = ~/.config/git/ignore
+    autocrlf = false
+    safecrlf = false
+    fsmonitor = true
+    untrackedCache = true
+
+[init]
+    defaultBranch = main
+
+[ghq]
+    vcs = git
+    root = ~/Workspace/src
+
+[hub]
+    protocol = https
+
+[push]
+    autoSetupRemote = true
+    default = simple
+    followTags = true
+
+[pull]
+    rebase = true
+
+[fetch]
+    prune = true
+    pruneTags = true
+    all = true
+
+[rerere]
+    enabled = true
+    autoupdate = true
+
+[rebase]
+    autoSquash = true
+    autoStash = true
+    updateRefs = true
+
+[diff]
+    algorithm = histogram
+    colorMoved = plain
+    mnemonicPrefix = true
+    renames = true
+
+[column]
+    ui = auto
+
+[branch]
+    sort = -committerdate
+
+[help]
+    autocorrect = prompt
+
+[receive]
+    denyNonFastForwards = true
+
+[filter "lfs"]
+    process = git-lfs filter-process
+    required = true
+    clean = git-lfs clean -- %f
+    smudge = git-lfs smudge -- %f
+
+[alias]
+    a = !git add -A && git commit -m
+
+    # Diff aliases
+    unstaged = diff
+    staged = diff --cached
+    both = diff HEAD
+
+    # Pretty log
+    lg1 = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(bold yellow)%d%C(reset)' --all
+    lg2 = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset)%C(bold yellow)%d%C(reset)%n''          %C(white)%s%C(reset) %C(dim white)- %an%C(reset)' --all
+    lg = !"git lg1"
+
+    # Useful shortcuts
+    co = checkout
+    br = branch
+    ci = commit
+    st = status
+    last = log -1 HEAD
+    visual = !gitk

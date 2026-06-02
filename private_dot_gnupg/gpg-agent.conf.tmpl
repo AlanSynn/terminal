@@ -10,9 +10,11 @@
 {{-   end -}}
 {{- else if $isLinux -}}
 {{-   $brewPrefix = "/home/linuxbrew/.linuxbrew" -}}
-{{- end -}}
-{{- if $isMac }}
+{{- end }}
+{{- if $isMac -}}
 pinentry-program {{ $brewPrefix }}/bin/pinentry-mac
-{{- else if $isLinux }}
+enable-ssh-support
+{{- else if $isLinux -}}
 # Prefer distribution pinentry on Linux; override in ~/.gnupg/gpg-agent.conf.local if needed.
+enable-ssh-support
 {{- end }}

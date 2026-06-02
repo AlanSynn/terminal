@@ -1,0 +1,302 @@
+#!/usr/bin/env bash
+# ~/.zshrc.alan (Compatible with both bash and zsh)
+# Author: Alan Synn
+# Date: 2025-03-31
+# Description: Cross-shell configuration for Linux and macOS
+# Compatible with both bash and zsh shells
+
+###################################################
+##### 1. Path Management
+###################################################
+
+path_add() {
+    if [ -d "$1" ] && [[ ":$PATH:" != *":$1:"* ]]; then
+        export PATH="$1:$PATH"
+    fi
+}
+
+path_append() {
+    if [ -d "$1" ] && [[ ":$PATH:" != *":$1:"* ]]; then
+        export PATH="$PATH:$1"
+    fi
+}
+
+# Core system paths
+path_add "/usr/local/sbin"
+path_add "$HOME/.local/bin"
+
+# Language and development paths
+path_add "/usr/local/opt/ruby/bin"
+path_add "$HOME/.rbenv/bin"
+path_append "$GOPATH/bin"
+path_append "$HOME/.pub-cache/bin"
+path_add "$HOME/.cargo/bin"
+path_add "$HOME/.poetry/bin"
+
+# Database paths
+path_add "/Applications/Postgres.app/Contents/Versions/latest/bin"
+
+# Android SDK paths
+export ANDROID_SDK_ROOT=$HOME/Library/Android/sdk
+path_append "$ANDROID_SDK_ROOT/emulator"
+path_append "$ANDROID_SDK_ROOT/platform-tools"
+
+# TeX paths
+path_add "/usr/local/texlive/2024basic/bin/universal-darwin"
+
+# fnm
+FNM_PATH="/Users/alansynn/Library/Application Support/fnm"
+if [ -d "$FNM_PATH" ]; then
+  path_add "/Users/alansynn/Library/Application Support/fnm"
+  if command -v fnm > /dev/null; then
+    eval "$(fnm env)"
+  fi
+fi
+
+# Rust paths
+path_add "/usr/local/opt/rustup/bin"
+
+# Emacs paths
+path_add "/Users/alansynn/.config/emacs/bin"
+
+###################################################
+##### 2. Environment Variables
+###################################################
+
+export EDITOR="code"
+export GOPATH=$HOME/Workspace
+export GHQ_ROOT=$GOPATH/src
+
+# NVM configuration
+export NVM_DIR="$HOME/.nvm"
+if [[ "$OSTYPE" == "linux-gnu" ]]; then
+    export NVM_EXEC_DIR="$NVM_DIR"
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+    export NVM_EXEC_DIR="/usr/local/opt/nvm/"
+fi
+[ -s "$NVM_EXEC_DIR/nvm.sh" ] && . "$NVM_EXEC_DIR/nvm.sh"
+[ -s "$NVM_EXEC_DIR/bash_completion" ] && . "$NVM_EXEC_DIR/bash_completion"
+
+# Ruby and Tcl/Tk configuration
+if command -v brew > /dev/null; then
+    export LDFLAGS="-L/usr/local/opt/ruby/lib -L$(brew --prefix tcl-tk)/lib"
+    export CPPFLAGS="-I/usr/local/opt/ruby/include -I$(brew --prefix tcl-tk)/include"
+    export PKG_CONFIG_PATH="/usr/local/opt/ruby/lib/pkgconfig:$(brew --prefix tcl-tk)/lib/pkgconfig"
+fi
+
+# Node.js configuration
+export LDFLAGS="-L/usr/local/opt/node@22/lib"
+export CPPFLAGS="-I/usr/local/opt/node@22/include"
+
+###################################################
+##### 3. Functions
+###################################################
+
+cl() {
+    if [ -d "$@" ]; then
+        echo -n "Stack: "
+        pushd "$@"
+        ls
+    else
+        cd "$@"
+        ls
+    fi
+}
+
+if [[ "$0" == *"zsh"* ]] || [ -n "$ZSH_VERSION" ]; then
+    # Zsh-specific functions
+    peco-src() {
+      local src=$(ghq list | peco --query "$LBUFFER")
+      if [ -n "$src" ]; then
+        BUFFER="cd $GOPATH/src/$src"
+        zle accept-line
+      fi
+      zle -R -c
+    }
+    zle -N peco-src
+    bindkey '^]' peco-src
+
+    peco-prompt() {
+      local selected_file=$(find $HOME/.prompts -maxdepth 2 -type f | peco --query "$LBUFFER")
+      if [ -n "$selected_file" ]; then
+        BUFFER="cat $selected_file"
+        zle accept-line
+      fi
+      pbcopy < $selected_file
+      zle -R -c
+    }
+    zle -N peco-prompt
+    bindkey '^[p' peco-prompt
+
+    peco-select-history() {
+        local tac
+        if which tac > /dev/null; then
+            tac="tac"
+        else
+            tac="tail -r"
+        fi
+        BUFFER=$(history -n 1 | \
+            eval $tac | \
+            peco --query "$LBUFFER")
+        CURSOR=$#BUFFER
+        zle clear-screen
+    }
+    zle -N peco-select-history
+    bindkey '^r' peco-select-history
+fi
+
+pyclean() {
+    find . -regex '^.*\(__pycache__\|\.py[co]\)$' -delete
+}
+
+ccv() {
+  local env_vars=(
+    "ENABLE_BACKGROUND_TASKS=true"
+    "FORCE_AUTO_BACKGROUND_TASKS=true"
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=true"
+    "CLAUDE_CODE_ENABLE_UNIFIED_READ_TOOL=true"
+  )
+
+  local claude_args=()
+
+  if [ "$1" = "-y" ]; then
+    claude_args+=("--dangerously-skip-permissions")
+  elif [ "$1" = "-r" ]; then
+    claude_args+=("--resume")
+  elif [ "$1" = "-ry" ] || [ "$1" = "-yr" ]; then
+    claude_args+=("--resume" "--dangerously-skip-permissions")
+  fi
+
+  env "${env_vars[@]}" claude "${claude_args[@]}"
+}
+
+###################################################
+##### 4. Plugins and External Tools
+###################################################
+
+# fnm
+if command -v fnm > /dev/null; then
+    if [[ "$0" == *"zsh"* ]] || [ -n "$ZSH_VERSION" ]; then
+        eval "$(fnm env --use-on-cd --shell zsh)"
+    else
+        eval "$(fnm env --use-on-cd --shell bash)"
+    fi
+fi
+
+# Hub
+if command -v hub > /dev/null; then
+    eval "$(hub alias -s)"
+fi
+
+# Z directory jumper
+if [[ "$OSTYPE" == "linux-gnu" ]]; then
+    [ -f "$HOME/init/z/z.sh" ] && . "$HOME/init/z/z.sh"
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+    [ -f "/usr/local/etc/profile.d/z.sh" ] && . "/usr/local/etc/profile.d/z.sh"
+fi
+
+# Autoenv
+if [[ "$OSTYPE" == "linux-gnu" ]]; then
+    [ -f "$HOME/.autoenv/activate.sh" ] && source "$HOME/.autoenv/activate.sh"
+fi
+export AUTOENV_ENABLE_LEAVE=y
+
+# Rbenv
+if command -v rbenv > /dev/null; then
+    eval "$(rbenv init -)"
+fi
+
+# Vault completion
+if [[ "$OSTYPE" == "linux-gnu" ]] && [ -f "/usr/local/bin/vault" ]; then
+    complete -o nospace -C /usr/local/bin/vault vault
+fi
+
+# FZF - Load appropriate shell bindings
+if [[ "$0" == *"zsh"* ]] || [ -n "$ZSH_VERSION" ]; then
+    [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+elif [[ "$0" == *"bash"* ]] || [ -n "$BASH_VERSION" ]; then
+    [ -f ~/.fzf.bash ] && source ~/.fzf.bash
+fi
+export FZF_DEFAULT_OPTS='--height 40% --layout=reverse --border'
+
+# jEnv
+if command -v jenv > /dev/null; then
+    eval "$(jenv init -)"
+fi
+
+# Unalias conda and mamba
+if command -v conda > /dev/null && alias conda &>/dev/null; then
+    unalias conda 2>/dev/null
+fi
+if command -v mamba > /dev/null && alias mamba &>/dev/null; then
+    unalias mamba 2>/dev/null
+fi
+
+# Micromamba
+export MAMBA_EXE='/Users/alansynn/.local/bin/micromamba'
+export MAMBA_ROOT_PREFIX='/Users/alansynn/micromamba'
+if [ -f "$MAMBA_EXE" ]; then
+    if [[ "$0" == *"zsh"* ]] || [ -n "$ZSH_VERSION" ]; then
+        __mamba_setup="$("$MAMBA_EXE" shell hook --shell zsh --root-prefix "$MAMBA_ROOT_PREFIX" 2> /dev/null)"
+    else
+        __mamba_setup="$("$MAMBA_EXE" shell hook --shell bash --root-prefix "$MAMBA_ROOT_PREFIX" 2> /dev/null)"
+    fi
+    if [ $? -eq 0 ]; then
+        eval "$__mamba_setup"
+    else
+        alias micromamba="$MAMBA_EXE"
+    fi
+    unset __mamba_setup
+fi
+
+# Docker CLI completions (zsh only)
+fpath=(/Users/alansynn/.docker/completions $fpath)
+
+# zcompdump
+autoload -Uz compinit
+compinit -C -d ~/.zcompdump
+
+# Codex
+codex() {
+  command codex -s workspace-write -c "sandbox_workspace_write.writable_roots=['/Users/alansynn/.cache/uv']" "$@"
+}
+
+###################################################
+##### 5. Aliases
+###################################################
+
+alias vim='nvim'
+alias vi='nvim'
+
+alias ll='ls -al'
+alias lg='lazygit'
+alias did="vim +'normal Go' +'r!date' ~/.did.md"
+alias alan='aichat'
+alias yt='yt-dlp'
+alias conda='micromamba'
+alias mamba='micromamba'
+
+###################################################
+##### 6. API Keys and Credentials
+###################################################
+
+export OPENAI_API_KEY='{{ env "OPENAI_API_KEY" }}'
+export GOOGLE_API_KEY='{{ env "GOOGLE_API_KEY" }}'
+export POLLINATIONS_API_KEY='{{ env "POLLINATIONS_API_KEY" }}'
+
+###################################################
+##### 7. Additional Configurations
+###################################################
+
+# HOMEBREW
+export HOMEBREW_NO_ENV_HINTS=1
+
+# pnpm
+export PNPM_HOME="/Users/alansynn/Library/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+
+# Include custom functions
+[ -f ~/.shell.alan ] && source ~/.shell.alan

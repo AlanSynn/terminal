@@ -4,6 +4,7 @@ masterplan.md
 bootstrap.sh
 Justfile
 packages/
+backup/
 scripts/
 docs/
 inventories/
@@ -34,4 +35,14 @@ private_Library/
 {{- end }}
 {{- if ne .chezmoi.os "linux" }}
 .chezmoiscripts/run_once_*linux*.sh.tmpl
+{{- end }}
+
+# Current-Mac terminal parity: do not introduce absent optional CLI configs by default
+private_dot_config/llm/
+private_dot_config/opencode/
+.config/opencode/
+.config/llm/
+
+{{- if eq .chezmoi.os "darwin" }}
+.zshenv
 {{- end }}

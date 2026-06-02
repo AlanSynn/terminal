@@ -89,3 +89,7 @@ restore-plan DRIVE:
 # Build Ubuntu Docker smoke image
 ubuntu-smoke:
     docker build -f test/docker/Dockerfile.ubuntu -t workstation-bootstrap-ubuntu-smoke .
+
+# Compare managed terminal dotfiles against the current Mac home directory
+terminal-parity:
+    test/terminal-parity.sh

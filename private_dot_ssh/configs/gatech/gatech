@@ -1,0 +1,27 @@
+### Georgia Tech CoC Cluster ###
+Host gt-pace-ice
+    HostName login-ice.pace.gatech.edu
+
+Host gt-pace-phoenix
+    HostName login-phoenix.pace.gatech.edu
+
+### End of Georgia Tech CoC Cluster ###
+
+### GT Azure Instance ###
+
+Host gt-azure-hub
+    User azureuser
+    HostName 57.154.65.236
+    IdentityFile ~/.ssh/id_rsa
+    ObscureKeystrokeTiming no
+
+### End of GT Azure Instance ###
+
+### Default Config for Georgia Tech CoC Cluster ###
+
+Host gt-pace-*
+    User dsynn6
+    IdentityFile ~/.ssh/personal_keys/default
+    ObscureKeystrokeTiming no
+
+### End of Default Config for Georgia Tech CoC Cluster ###

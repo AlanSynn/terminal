@@ -1,33 +1,36 @@
+# Terminal parity external dependencies are pinned to the current source Mac commits.
+# Refresh deliberately after testing, not implicitly on every new-machine bootstrap.
 [".oh-my-zsh"]
     type = "archive"
-    url = "https://github.com/ohmyzsh/ohmyzsh/archive/master.tar.gz"
-    exact = true
+    url = "https://github.com/ohmyzsh/ohmyzsh/archive/e7aa0c56e68348afefdd6af4c5bdb314a2bd6640.tar.gz"
+    exact = false
     stripComponents = 1
-    refreshPeriod = "168h"
+    refreshPeriod = "0"
 
 [".oh-my-zsh/custom/themes/pure"]
     type = "archive"
-    url = "https://github.com/sindresorhus/pure/archive/main.tar.gz"
-    exact = true
+    url = "https://github.com/sindresorhus/pure/archive/92b8e9057988566b37ff695e70e2e9bbeb7196c8.tar.gz"
+    exact = false
     stripComponents = 1
-    refreshPeriod = "168h"
+    refreshPeriod = "0"
 
 [".oh-my-zsh/custom/plugins/zsh-syntax-highlighting"]
     type = "archive"
-    url = "https://github.com/zsh-users/zsh-syntax-highlighting/archive/master.tar.gz"
-    exact = true
+    url = "https://github.com/zsh-users/zsh-syntax-highlighting/archive/0e1bb14452e3fc66dcc81531212e1061e02c1a61.tar.gz"
+    exact = false
     stripComponents = 1
-    refreshPeriod = "168h"
+    refreshPeriod = "0"
 
 [".oh-my-zsh/custom/plugins/zsh-autosuggestions"]
     type = "archive"
-    url = "https://github.com/zsh-users/zsh-autosuggestions/archive/master.tar.gz"
-    exact = true
+    url = "https://github.com/zsh-users/zsh-autosuggestions/archive/0e810e5afa27acbd074398eefbe28d13005dbc15.tar.gz"
+    exact = false
     stripComponents = 1
-    refreshPeriod = "168h"
+    refreshPeriod = "0"
 
 [".tmux/plugins/tpm"]
-    type = "git-repo"
-    url = "https://github.com/tmux-plugins/tpm.git"
-    refreshPeriod = "168h"
-    clone.args = ["--depth", "1"]
+    type = "archive"
+    url = "https://github.com/tmux-plugins/tpm/archive/99469c4a9b1ccf77fade25842dc7bafbc8ce9946.tar.gz"
+    exact = false
+    stripComponents = 1
+    refreshPeriod = "0"

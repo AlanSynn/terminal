@@ -1,9 +1,28 @@
 {{- $isMac := eq .chezmoi.os "darwin" -}}
-# Managed SSH config template. Keys are intentionally not stored in this repo.
-Host github.com
+Include configs/gatech/*
+Include configs/personal/*
+
+### Default for all ###
+Host github
     HostName github.com
     User git
+    IdentityFile ~/.ssh/id_ed25519
+    Ciphers +aes256-cbc,aes192-cbc,aes128-cbc
+
+Host *
+    ServerAliveInterval 120
+    ServerAliveCountMax 3
     AddKeysToAgent yes
-{{- if $isMac }}
-    UseKeychain yes
-{{- end }}
+{{ if $isMac }}    UseKeychain yes
+    IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+{{ end }}    IdentitiesOnly yes
+    TCPKeepAlive yes
+    ControlMaster auto
+    ControlPath ~/.ssh/sessions/cm-%r@%h:%p
+    ControlPersist 30m
+    RekeyLimit 1G 1h
+    Compression yes
+    IPQoS none
+    SetEnv TERM=xterm-256color
+
+### End of Default ###

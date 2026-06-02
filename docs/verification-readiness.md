@@ -9,6 +9,7 @@ This is the current checklist before trusting `workstation-bootstrap` on a new m
 - VS Code extensions are a canonical manifest in `packages/vscode-extensions.txt`.
 - Paid/large Mac App Store apps are included in `packages/mas.darwin.txt` for full migration.
 - Important user directories are handled by external-drive rsync manifests, not git or chezmoi.
+- Terminal parity is now explicit: zsh, tmux, git, vim, SSH config, GPG agent, fzf, and local shell helpers have a dedicated `just terminal-parity` check.
 - Inventory-only entries in `inventories/current-machine/curation-report.md` are review candidates, not install requirements.
 - Raw inventory dumps are kept under `inventories/current-machine/raw/` and ignored by git/Docker.
 - No full real-machine install has been run yet.
@@ -19,10 +20,11 @@ This is the current checklist before trusting `workstation-bootstrap` on a new m
 2. Validate Ubuntu behavior in Docker on every significant script/package-manifest change.
 3. Run a real Ubuntu VM dry-run before using the repo on a real Linux workstation.
 4. Run macOS dry-run on the current Mac before applying full-tier defaults.
-5. Install `shellcheck` locally or in CI so shell lint stops being skipped.
-6. Run `just manifest-check` after editing package, MAS, VS Code, or backup manifests.
-7. Run `just backup-smoke` after editing backup/restore scripts or backup manifests.
-8. Review remaining inventory-only entries; promote unless excluded for duplication, broken upstream casks, transitive dependencies, obsolete runtimes, or service risk.
+5. Run `just terminal-parity` after editing terminal dotfiles or importing current-machine shell config.
+6. Install `shellcheck` locally or in CI so shell lint stops being skipped.
+7. Run `just manifest-check` after editing package, MAS, VS Code, or backup manifests.
+8. Run `just backup-smoke` after editing backup/restore scripts or backup manifests.
+9. Review remaining inventory-only entries; promote unless excluded for duplication, broken upstream casks, transitive dependencies, obsolete runtimes, or service risk.
 
 ## Required local verification commands
 
@@ -35,6 +37,7 @@ test/smoke-bootstrap.sh
 just ubuntu-smoke
 just manifest-check
 just backup-smoke
+just terminal-parity
 ```
 
 ## Ubuntu VM verification prep
@@ -69,6 +72,7 @@ Stop and inspect before applying if any of these occur:
 - `chezmoi diff --source .` shows unexpected credential/app-state files.
 - Ubuntu dry-run attempts non-apt distro logic.
 - macOS dry-run attempts destructive cleanup or broad app-state copying.
+- `just terminal-parity` reports unexpected shell/tmux/git/vim/SSH/GPG drift on the source Mac.
 - Backup dry-run targets `/`, `$HOME`, the repo root, or an unmarked external drive.
 - Restore dry-run writes directly into live home directories instead of staging.
 - Any command asks for credentials or production account changes unexpectedly.

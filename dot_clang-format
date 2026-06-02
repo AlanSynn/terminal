@@ -1,3 +1,37 @@
-BasedOnStyle: LLVM
+Language: Cpp
+BasedOnStyle: Google
+
 IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+
 ColumnLimit: 100
+AllowShortFunctionsOnASingleLine: InlineOnly
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+DerivePointerAlignment: true
+PointerAlignment: Left
+
+BreakBeforeBraces: Allman
+BraceWrapping:
+  AfterClass: true
+  AfterControlStatement: true
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterStruct: true
+  AfterUnion: true
+  BeforeCatch: true
+  BeforeElse: true
+  BeforeWhile: true
+  SplitEmptyFunction: true
+
+SpaceBeforeParens: ControlStatements
+SpacesInParentheses: false
+
+IndentCaseLabels: true
+IndentWrappedFunctionNames: true
+IndentFunctionDeclarationAfterType: true
+
+AllowShortFunctionsOnASingleLine: InlineOnly
+AllowShortIfStatementsOnASingleLine: true

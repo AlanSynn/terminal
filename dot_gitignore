@@ -1,7 +1,5 @@
-.DS_Store
-*.swp
-*.swo
-.env
-.env.*
-__pycache__/
-node_modules/
+.cursorignore
+.cursorrules
+.python-version
+.cursor/
+.claude/

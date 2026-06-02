@@ -1,0 +1,12 @@
+### NERSC Cluster ###
+Host nersc-perlmutter
+    HostName perlmutter-p1.nersc.gov
+
+### End of NERSC Cluster ###
+
+### Default Config for NERSC Cluster ###
+
+Host nersc-*
+    User alansynn
+
+### End of Default Config for NERSC Cluster ###
