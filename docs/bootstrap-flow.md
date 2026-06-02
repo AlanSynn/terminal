@@ -1,6 +1,6 @@
 # Bootstrap Flow
 
-The entrypoint is `./bootstrap.sh`. It is intentionally staged so a fresh machine can start with a safe dry-run and then graduate to real install tiers.
+The friendly entrypoint is `./install.sh`; it wraps `./bootstrap.sh`, which remains the deterministic engine. The flow is intentionally staged so a fresh machine can start with a safe dry-run and then graduate to real install tiers.
 
 ## Tiers
 

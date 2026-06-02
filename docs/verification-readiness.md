@@ -6,6 +6,7 @@ This is the current checklist before trusting `workstation-bootstrap` on a new m
 
 - Public release readiness now has a dedicated audit command: `just public-audit`.
 - Private repo operational security now has a dedicated audit command: `just private-risk-audit`.
+- `install.sh` is now the friendly first-run wrapper; `bootstrap.sh` remains the deterministic engine.
 - Repository has an initial safe bootstrap scaffold and a current-machine inventory snapshot.
 - Linux scope is currently Ubuntu only; Fedora/Arch support is deferred.
 - VS Code extensions are a canonical manifest in `packages/vscode-extensions.txt`.
@@ -35,6 +36,7 @@ just --list
 just inventory
 scripts/verify-no-secrets.sh
 just verify
+just installer-smoke
 test/smoke-bootstrap.sh
 just ubuntu-smoke
 just manifest-check

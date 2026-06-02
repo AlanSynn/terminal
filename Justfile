@@ -17,6 +17,14 @@ bootstrap-cli-dry-run:
 bootstrap tier="cli":
     ./bootstrap.sh --tier {{tier}}
 
+# Run the friendly installer menu/wrapper
+install:
+    ./install.sh
+
+# Smoke-test the friendly installer wrapper
+installer-smoke:
+    test/installer-smoke.sh
+
 # Run environment diagnostics
 doctor:
     scripts/doctor.sh
@@ -33,17 +41,17 @@ curate-inventory:
 # Audit current machine and build curation report
 inventory: audit curate-inventory
 
-# Verify scripts, manifests, backup plan, and secret hygiene
-verify: secret-scan shell-syntax manifest-check backup-smoke private-risk-audit-self-test
+# Verify scripts, manifests, backup plan, installer UX, and secret hygiene
+verify: secret-scan shell-syntax manifest-check backup-smoke private-risk-audit-self-test installer-smoke
     scripts/verify-new-machine.sh --tier ci
 
 # Check shell syntax
 shell-syntax:
-    bash -n bootstrap.sh scripts/*.sh scripts/lib/*.sh test/*.sh
+    bash -n install.sh bootstrap.sh scripts/*.sh scripts/lib/*.sh test/*.sh
 
 # Run shellcheck if available
 shellcheck:
-    if command -v shellcheck >/dev/null 2>&1; then shellcheck bootstrap.sh scripts/*.sh scripts/lib/*.sh test/*.sh; else echo "shellcheck not installed; skipping"; fi
+    if command -v shellcheck >/dev/null 2>&1; then shellcheck install.sh bootstrap.sh scripts/*.sh scripts/lib/*.sh test/*.sh; else echo "shellcheck not installed; skipping"; fi
 
 # Scan repository for high-confidence secrets
 secret-scan:
