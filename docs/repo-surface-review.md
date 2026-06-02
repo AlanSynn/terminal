@@ -6,12 +6,22 @@ This review answers whether workstation-bootstrap currently has unnecessary lega
 
 The repo is not fundamentally bloated, but its **first-run surface was too noisy**: README mixed quick start, migration policy, backup layout, terminal parity, and verification details. The right cleanup is to make `install.sh` + README the polished front door and keep detailed docs as references.
 
+Latest cleanup pass:
+
+- Added root `AGENTS.md` so future agents have repo-specific best practices,
+  verification gates, security rules, terminal parity rules, and Lore commit
+  guidance without re-deriving them from chat history.
+- Removed `test/verify-no-secrets.sh`, which was only a one-line wrapper around
+  `scripts/verify-no-secrets.sh`. The canonical entrypoints are now the script
+  itself and `just secret-scan`.
+
 ## Keep as first-class surfaces
 
 | Surface | Why keep |
 | --- | --- |
 | `install.sh` | Interface-first entrypoint: one command, numbered menu choices, dry-run default, no normal install flags. |
 | `bootstrap.sh` | Deterministic install engine used by the wrapper and scripts. |
+| `AGENTS.md` | Repo-local operating contract for future coding agents. |
 | `Justfile` | Discoverable local task index. |
 | `packages/` | Declarative install manifests for Homebrew, MAS, apt, VS Code, npm/bun/uv/cargo. |
 | `.chezmoi*`, `dot_*`, `private_dot_*` | Core terminal parity and dotfile render source. |
@@ -39,6 +49,17 @@ Do not delete these in this pass; revisit after a real macOS/Ubuntu apply:
 3. Consolidate tiny platform notes into `docs/bootstrap-flow.md` if they stop changing.
 4. Decide whether Nix remains a phase-2 note or should be removed entirely.
 5. Add a generated command reference if `Justfile` grows further.
+6. Revisit stale non-behavioral comments in terminal dotfiles only with a
+   terminal-parity check, because even harmless dotfile edits can create noisy
+   source-machine diffs.
+
+## Apparent duplicates that are intentional
+
+| Pattern | Why it stays |
+| --- | --- |
+| `inventories/current-machine/*.txt` and `packages/*.txt` | Inventory files are observed current-machine evidence; package files are curated canonical manifests. |
+| `install.sh` and `bootstrap.sh` | Wrapper/engine boundary: human TTY UX vs deterministic automation. |
+| Security docs split across public/private/secrets files | Each file covers a different failure mode: accidental public exposure, private-repo operational risk, and high-confidence secret prevention. |
 
 ## Why not delete more now?
 
