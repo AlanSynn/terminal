@@ -34,7 +34,7 @@ curate-inventory:
 inventory: audit curate-inventory
 
 # Verify scripts, manifests, backup plan, and secret hygiene
-verify: secret-scan shell-syntax manifest-check backup-smoke
+verify: secret-scan shell-syntax manifest-check backup-smoke private-risk-audit-self-test
     scripts/verify-new-machine.sh --tier ci
 
 # Check shell syntax
@@ -101,3 +101,15 @@ public-audit:
 # Strict public audit; fails on privacy/public-surface findings too
 public-audit-strict:
     scripts/audit-public-readiness.sh --strict
+
+# Audit operational risks that matter even when the repo remains private
+private-risk-audit:
+    scripts/audit-private-risk.sh --report
+
+# Run private-risk audit parser regression tests
+private-risk-audit-self-test:
+    scripts/audit-private-risk.sh --self-test
+
+# Strict private risk audit; fails while HIGH operational risks remain
+private-risk-audit-strict:
+    scripts/audit-private-risk.sh --strict
