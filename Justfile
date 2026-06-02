@@ -93,3 +93,11 @@ ubuntu-smoke:
 # Compare managed terminal dotfiles against the current Mac home directory
 terminal-parity:
     test/terminal-parity.sh
+
+# Audit whether tracked content is safe to publish publicly; privacy findings are warnings
+public-audit:
+    scripts/audit-public-readiness.sh --report
+
+# Strict public audit; fails on privacy/public-surface findings too
+public-audit-strict:
+    scripts/audit-public-readiness.sh --strict

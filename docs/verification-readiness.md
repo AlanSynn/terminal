@@ -4,6 +4,7 @@ This is the current checklist before trusting `workstation-bootstrap` on a new m
 
 ## Current situation
 
+- Public release readiness now has a dedicated audit command: `just public-audit`.
 - Repository has an initial safe bootstrap scaffold and a current-machine inventory snapshot.
 - Linux scope is currently Ubuntu only; Fedora/Arch support is deferred.
 - VS Code extensions are a canonical manifest in `packages/vscode-extensions.txt`.
@@ -38,6 +39,7 @@ just ubuntu-smoke
 just manifest-check
 just backup-smoke
 just terminal-parity
+just public-audit
 ```
 
 ## Ubuntu VM verification prep
@@ -75,4 +77,5 @@ Stop and inspect before applying if any of these occur:
 - `just terminal-parity` reports unexpected shell/tmux/git/vim/SSH/GPG drift on the source Mac.
 - Backup dry-run targets `/`, `$HOME`, the repo root, or an unmarked external drive.
 - Restore dry-run writes directly into live home directories instead of staging.
+- `just public-audit` reports high-confidence secrets, or `just public-audit-strict` reports privacy surfaces you do not want public.
 - Any command asks for credentials or production account changes unexpectedly.
