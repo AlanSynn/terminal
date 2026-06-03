@@ -10,6 +10,8 @@ Alan의 macOS + Ubuntu 개발 환경을 새 컴퓨터에 재현하기 위한 **I
 git clone <repo-url> ~/Workspace/src/Management/terminal
 cd ~/Workspace/src/Management/terminal
 ./install.sh
+# or, if just is already installed:
+just
 ```
 
 `install.sh`의 원칙:
@@ -20,6 +22,7 @@ cd ~/Workspace/src/Management/terminal
 - 실행마다 `run id`, `Planned flow`, `[FLOW 1/3]` 같은 단계 표시가 나와서 어디까지 왔는지 추적할 수 있습니다.
 - 실제 적용은 메뉴에서 `apply`를 고른 뒤 `APPLY`를 직접 입력해야 합니다.
 - 자동화/CI/디버깅이 필요할 때만 하위 엔진인 `bootstrap.sh`를 직접 호출합니다.
+- `just`만 실행해도 같은 `install.sh` 인터페이스가 열립니다. recipe 목록은 `just list`로 봅니다.
 
 메뉴 흐름:
 

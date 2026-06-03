@@ -1,8 +1,12 @@
 set shell := ["bash", "-uc"]
 set positional-arguments
 
-# Show commands
+# Run the friendly installer menu/wrapper
 default:
+    @./install.sh
+
+# Show commands
+list:
     @just --list
 
 # Dry-run minimal bootstrap
@@ -19,7 +23,7 @@ bootstrap tier="cli":
 
 # Run the friendly installer menu/wrapper
 install:
-    ./install.sh
+    @./install.sh
 
 # Smoke-test the friendly installer wrapper
 installer-smoke:

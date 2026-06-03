@@ -14,6 +14,9 @@ friendly command:
 ./install.sh
 ```
 
+When `just` is already installed, plain `just` is an equivalent shortcut to
+`./install.sh`; keep `just list` as the command-discovery path.
+
 The human first-run experience must stay simple and menu-driven. The lower-level
 engine, manifests, tests, and docs exist to make that one command safe,
 auditable, and reproducible.

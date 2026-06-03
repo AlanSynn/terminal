@@ -27,6 +27,20 @@ for rejected in '--tier cli' '--profile personal' '--audit standard' '--apply' '
   grep -Fq 'selected through the interface' "$tmp_dir/flag.txt"
 done
 
+if command -v just >/dev/null 2>&1; then
+  just --dry-run > "$tmp_dir/just-dry-run.txt" 2>&1
+  grep -Fq './install.sh' "$tmp_dir/just-dry-run.txt"
+  WB_INSTALL_ACTION=plan-only \
+  WB_INSTALL_PROFILE=personal \
+  WB_INSTALL_TIER=cli \
+  WB_INSTALL_AUDIT=none \
+  WB_INSTALL_RUN_ID=just-smoke \
+    just > "$tmp_dir/just-plan.txt"
+  grep -Fq 'run id:   just-smoke' "$tmp_dir/just-plan.txt"
+  grep -Fq 'action:   plan-only' "$tmp_dir/just-plan.txt"
+  grep -Fq 'plan rendered; no changes made (run id: just-smoke)' "$tmp_dir/just-plan.txt"
+fi
+
 WB_INSTALL_ACTION=plan-only \
 WB_INSTALL_PROFILE=personal \
 WB_INSTALL_TIER=cli \
